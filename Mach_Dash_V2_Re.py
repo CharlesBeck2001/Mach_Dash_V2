@@ -592,55 +592,53 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Users With The Most Trades")
-    # Get the paginated DataFrame
-    df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
     
-    # Display the DataFrame
-    st.write(df_paginated_trade)
+    # Create two columns within col1 for the DataFrame and the pagination buttons
+    col_data, col_buttons = st.columns([3, 1])  # Adjust the ratios as needed
     
-    # Calculate total pages for trade data
-    total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
+    with col_data:
+        # Get the paginated DataFrame
+        df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
+        
+        # Display the DataFrame
+        st.write(df_paginated_trade)
     
-    # Pagination buttons for trade data
-    col_left, col_right = st.columns([1, 1])
-    
-    with col_left:
-        # Disable "Previous" on the first page
+    with col_buttons:
+        # Calculate total pages for trade data
+        total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
+        
+        # Pagination buttons for trade data
         if st.session_state.page_trade > 0:
             if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
                 handle_page_change('page_trade', 'previous', total_pages_trade)
-            
-    with col_right:
-        # Disable "Next" on the last page
+                
         if st.session_state.page_trade < total_pages_trade - 1:
             if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
                 handle_page_change('page_trade', 'next', total_pages_trade)
-                
 
 # For 'Users With The Most Volume' section
 with col2:
     st.subheader("Users With The Most Volume")
     
-    # Get the paginated DataFrame
-    df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
+    # Create two columns within col2 for the DataFrame and the pagination buttons
+    col_data, col_buttons = st.columns([3, 1])  # Adjust the ratios as needed
     
-    # Display the DataFrame
-    st.write(df_paginated_volume)
+    with col_data:
+        # Get the paginated DataFrame
+        df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
+        
+        # Display the DataFrame
+        st.write(df_paginated_volume)
     
-    # Calculate total pages for volume data
-    total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
-    
-    # Pagination buttons for volume data
-    col_left, col_right = st.columns([1, 1])
-    
-    with col_left:
-        # Disable "Previous" on the first page
+    with col_buttons:
+        # Calculate total pages for volume data
+        total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
+        
+        # Pagination buttons for volume data
         if st.session_state.page_volume > 0:
             if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
                 handle_page_change('page_volume', 'previous', total_pages_volume)
-            
-    with col_right:
-        # Disable "Next" on the last page
+                
         if st.session_state.page_volume < total_pages_volume - 1:
             if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
                 handle_page_change('page_volume', 'next', total_pages_volume)
