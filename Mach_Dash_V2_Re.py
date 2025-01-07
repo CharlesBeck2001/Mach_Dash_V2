@@ -472,9 +472,13 @@ INNER JOIN dest_volume_table dvt
     
     df_trade_address = execute_sql(sql_query10)
     df_volume_address = execute_sql(sql_query11)
+
+    df_trade_rank = execute_sql(sql_query12)
     
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
+
+    df_trade_rank = pd.json_normalize(df_trade_rank['result'])
     
     trade_count = int(pd.json_normalize(df_total_trades['result'])['count'][0])
     # Dictionary holding the DataFrames
@@ -536,7 +540,7 @@ INNER JOIN dest_volume_table dvt
 col1, col2, col3 = st.columns(3)
 
 total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
-
+st.write(df_trade_rank)
 # Box 1
 with col1:
     st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
