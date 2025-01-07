@@ -588,7 +588,7 @@ def handle_page_change(page_key, direction, total_pages):
 
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
-
+st.write(df_trade_address)
 with col1:
     st.subheader("Users With The Most Trades")
 
