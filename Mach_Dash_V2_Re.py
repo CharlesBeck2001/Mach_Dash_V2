@@ -534,7 +534,7 @@ st.markdown(
 col1, col2 = st.columns(2)
 
 with col1:
-    st.write("Total Volume")
+    st.subheader("Total Volume")
     daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
         
     # Convert the daily data index to datetime without time
@@ -548,7 +548,7 @@ with col1:
     
 with col2:
     
-    st.write("Volume")
+    st.subheader("Volume")
     daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
         
     # Convert the daily data index to datetime without time
@@ -591,7 +591,7 @@ def handle_page_change(page_key, direction, total_pages):
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric(label="Users With The Most Trades")
+    st.subheader("Users With The Most Trades")
     # Get the paginated DataFrame
     df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
     
@@ -619,7 +619,7 @@ with col1:
 
 # For 'Users With The Most Volume' section
 with col2:
-    st.metric(label="Users With The Most Volume")
+    st.subheader("Users With The Most Volume")
     
     # Get the paginated DataFrame
     df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
