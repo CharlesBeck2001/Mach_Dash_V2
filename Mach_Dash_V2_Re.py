@@ -9,6 +9,7 @@ Created on Mon Jan  6 20:54:44 2025
 import streamlit as st
 import requests
 import pandas as pd
+import plotly.express as px
 
 # Set page configuration
 st.set_page_config(
@@ -663,3 +664,31 @@ with col2:
             if st.session_state.page_volume < total_pages_volume - 1:
                 if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
                     handle_page_change('page_volume', 'next', total_pages_volume)
+
+
+# Step 2: Compute cumulative sums for every 10 entries
+cumulative_sums = [
+    df_trade_address["trade_count"][:i].sum()
+    for i in range(10, len(df_trade_address) + 1, 10)
+]
+
+# Step 3: Create a DataFrame for the bar chart
+bars_df = pd.DataFrame({
+    "Top N Users": [f"Top {i}" for i in range(10, len(df_trade_address) + 1, 10)],
+    "Cumulative Trades": cumulative_sums
+})
+
+# Step 4: Plot using Plotly for interactivity
+fig = px.bar(
+    bars_df,
+    x="Top N Users",
+    y="Cumulative Trades",
+    title="Cumulative Trade Counts for Top N Users",
+    labels={"Cumulative Trades": "Trades", "Top N Users": "User Group"},
+    text="Cumulative Trades"
+)
+fig.update_traces(textposition="outside", marker_color='skyblue')
+fig.update_layout(xaxis_tickangle=-45)
+
+# Step 5: Display in Streamlit
+st.plotly_chart(fig, use_container_width=True)
