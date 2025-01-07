@@ -396,6 +396,40 @@ INNER JOIN dest_volume_table dvt
     ORDER BY total_user_volume DESC
     LIMIT 200
     """
+
+    sql_query12 = """ 
+    WITH RankedTrades AS (
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY COUNT(order_id) DESC) AS rank,
+        address,
+        COUNT(order_id) AS trade_count
+    FROM (
+        SELECT sender_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        UNION ALL
+        SELECT maker_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+    ) AS all_trades
+    GROUP BY address
+    ),
+    CumulativeTrades AS (
+    SELECT
+        rank AS N,
+        SUM(trade_count) OVER (ORDER BY rank) AS cumulative_trade_count,
+        (SELECT SUM(trade_count) FROM RankedTrades) AS total_trades
+    FROM RankedTrades
+    WHERE rank <= 200
+    )
+    SELECT
+        N,
+        CAST(cumulative_trade_count * 100.0 / total_trades AS FLOAT) AS percentage_of_total_trades
+    FROM CumulativeTrades
+    ORDER BY N
+    """
     @st.cache_data
     def execute_sql(query):
         headers = {
