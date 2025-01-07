@@ -602,14 +602,14 @@ with col1:
         if st.session_state.page_trade > 0:
             if st.button('Previous', key='prev_trade'):
                 st.session_state.page_trade -= 1
-                st.experimental_rerun()  # Force immediate rerun to update page
+                #st.experimental_rerun()  # Force immediate rerun to update page
     
     with col_right:
         # Disable "Next" on the last page
         if st.session_state.page_trade < total_pages_trade - 1:
             if st.button('Next', key='next_trade'):
                 st.session_state.page_trade += 1
-                st.experimental_rerun()  # Force immediate rerun to update page
+                #st.experimental_rerun()  # Force immediate rerun to update page
 
 # For 'Users With The Most Volume' section
 with col2:
