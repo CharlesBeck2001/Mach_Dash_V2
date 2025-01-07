@@ -592,9 +592,14 @@ col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 
 with col1:
     st.subheader("Users With The Most Trades")
-    
+
+    renamed_df_trade = st.session_state.df_trade_address.rename(columns={
+        'user_id': 'User ID',
+        'trade_count': 'Number of Trades',
+        'some_other_column': 'Other Info'
+    })
     # Get the paginated DataFrame
-    df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
+    df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
     
     # Display the DataFrame
     st.write(df_paginated_trade)
@@ -624,9 +629,14 @@ with col1:
 # For 'Users With The Most Volume' section
 with col2:
     st.subheader("Users With The Most Volume")
-    
+
+    renamed_df_volume = st.session_state.df_volume_address.rename(columns={
+        'user_id': 'User ID',
+        'total_volume': 'Total Volume',
+        'another_column': 'Some Other Data'
+    })
     # Get the paginated DataFrame
-    df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
+    df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
     
     # Display the DataFrame
     st.write(df_paginated_volume)
