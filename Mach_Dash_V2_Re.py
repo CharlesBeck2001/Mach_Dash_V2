@@ -585,7 +585,7 @@ def handle_page_change(page_key, direction, total_pages):
         st.session_state[page_key] += 1
     elif direction == 'previous':
         st.session_state[page_key] -= 1
-    st.experimental_rerun()
+    st.rerun()
 
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns(2)
