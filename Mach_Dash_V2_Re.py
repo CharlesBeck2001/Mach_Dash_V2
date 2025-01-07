@@ -596,15 +596,18 @@ with col1:
     
     # Pagination buttons for trade data
     col_left, col_right = st.columns([1, 1])
+    
     with col_left:
-        if st.button('Previous', key='prev_trade') and st.session_state.page_trade > 0:
-            st.session_state.page_trade -= 1
+        # Disable "Previous" on the first page
+        if st.session_state.page_trade > 0:
+            if st.button('Previous', key='prev_trade'):
+                st.session_state.page_trade -= 1
+    
     with col_right:
-        # Disable "Next" if on the last page
-        if st.button('Next', key='next_trade') and st.session_state.page_trade < total_pages_trade - 1:
-            st.session_state.page_trade += 1
-        elif st.session_state.page_trade == 0:
-            st.session_state.page_trade = 0  # Ensure initial page is 0 if it isn't
+        # Disable "Next" on the last page
+        if st.session_state.page_trade < total_pages_trade - 1:
+            if st.button('Next', key='next_trade'):
+                st.session_state.page_trade += 1
 
 # For 'Users With The Most Volume' section
 with col2:
@@ -621,12 +624,15 @@ with col2:
     
     # Pagination buttons for volume data
     col_left, col_right = st.columns([1, 1])
+    
     with col_left:
-        if st.button('Previous', key='prev_volume') and st.session_state.page_volume > 0:
-            st.session_state.page_volume -= 1
+        # Disable "Previous" on the first page
+        if st.session_state.page_volume > 0:
+            if st.button('Previous', key='prev_volume'):
+                st.session_state.page_volume -= 1
+    
     with col_right:
-        # Disable "Next" if on the last page
-        if st.button('Next', key='next_volume') and st.session_state.page_volume < total_pages_volume - 1:
-            st.session_state.page_volume += 1
-        elif st.session_state.page_volume == 0:
-            st.session_state.page_volume = 0  # Ensure initial page is 0 if it isn't
+        # Disable "Next" on the last page
+        if st.session_state.page_volume < total_pages_volume - 1:
+            if st.button('Next', key='next_volume'):
+                st.session_state.page_volume += 1
