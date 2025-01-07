@@ -585,6 +585,7 @@ def handle_page_change(page_key, direction, total_pages):
         st.session_state[page_key] += 1
     elif direction == 'previous':
         st.session_state[page_key] -= 1
+    st.experimental_rerun()
 
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns(2)
@@ -615,6 +616,7 @@ with col1:
         if st.session_state.page_trade < total_pages_trade - 1:
             if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
                 handle_page_change('page_trade', 'next', total_pages_trade)
+                
 
 # For 'Users With The Most Volume' section
 with col2:
