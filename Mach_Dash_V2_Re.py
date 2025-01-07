@@ -632,11 +632,11 @@ with col2:
         if st.session_state.page_volume > 0:
             if st.button('Previous', key='prev_volume'):
                 st.session_state.page_volume -= 1
-                st.experimental_rerun()  # Force immediate rerun to update page
+                #st.experimental_rerun()  # Force immediate rerun to update page
     
     with col_right:
         # Disable "Next" on the last page
         if st.session_state.page_volume < total_pages_volume - 1:
             if st.button('Next', key='next_volume'):
                 st.session_state.page_volume += 1
-                st.experimental_rerun()  # Force immediate rerun to update page
+                #st.experimental_rerun()  # Force immediate rerun to update page
