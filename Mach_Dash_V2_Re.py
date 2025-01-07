@@ -572,7 +572,16 @@ def paginate_df(df, page=0, page_size=10):
     end_row = start_row + page_size
     return df.iloc[start_row:end_row]
 
+# Calculate total pages for trade and volume data
+def calculate_total_pages(df, page_size=10):
+    total_pages = len(df) // page_size
+    if len(df) % page_size != 0:
+        total_pages += 1  # Account for remaining rows if not divisible by page_size
+    return total_pages
+
 # For 'Users With The Most Trades' section
+col1, col2 = st.columns(2)
+
 with col1:
     st.write("Users With The Most Trades")
     
@@ -582,13 +591,17 @@ with col1:
     # Display the DataFrame
     st.write(df_paginated_trade)
     
-    # Buttons for pagination
+    # Calculate total pages for trade data
+    total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
+    
+    # Pagination buttons for trade data
     col_left, col_right = st.columns([1, 1])
     with col_left:
         if st.button('Previous', key='prev_trade') and st.session_state.page_trade > 0:
             st.session_state.page_trade -= 1
     with col_right:
-        if st.button('Next', key='next_trade') and st.session_state.page_trade < len(st.session_state.df_trade_address) // 10:
+        # Disable "Next" if on the last page
+        if st.button('Next', key='next_trade') and st.session_state.page_trade < total_pages_trade - 1:
             st.session_state.page_trade += 1
 
 # For 'Users With The Most Volume' section
@@ -601,11 +614,15 @@ with col2:
     # Display the DataFrame
     st.write(df_paginated_volume)
     
-    # Buttons for pagination
+    # Calculate total pages for volume data
+    total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
+    
+    # Pagination buttons for volume data
     col_left, col_right = st.columns([1, 1])
     with col_left:
         if st.button('Previous', key='prev_volume') and st.session_state.page_volume > 0:
             st.session_state.page_volume -= 1
     with col_right:
-        if st.button('Next', key='next_volume') and st.session_state.page_volume < len(st.session_state.df_volume_address) // 10:
+        # Disable "Next" if on the last page
+        if st.button('Next', key='next_volume') and st.session_state.page_volume < total_pages_volume - 1:
             st.session_state.page_volume += 1
