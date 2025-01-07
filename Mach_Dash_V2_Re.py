@@ -666,16 +666,14 @@ with col2:
                     handle_page_change('page_volume', 'next', total_pages_volume)
 
 
-# Step 2: Compute cumulative sums for every 2 entries
-group_size = 2
+# Step 2: Compute cumulative sums for each user, up to the Top 30 users
 cumulative_sums = [
-    df_trade_address["trade_count"][:i].sum()
-    for i in range(group_size, len(df_trade_address) + 1, group_size)
+    df_trade_address["trade_count"][:i].sum() for i in range(1, min(len(df_trade_address), 30) + 1)
 ]
 
 # Step 3: Create a DataFrame for the bar chart
 bars_df = pd.DataFrame({
-    "Top N Users": [f"Top {i}" for i in range(group_size, len(df_trade_address) + 1, group_size)],
+    "Top N Users": [f"Top {i}" for i in range(1, len(cumulative_sums) + 1)],
     "Cumulative Trades": cumulative_sums
 })
 
