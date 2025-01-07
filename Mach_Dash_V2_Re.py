@@ -581,9 +581,9 @@ def calculate_total_pages(df, page_size=10):
 
 # Helper function to trigger state change
 def handle_page_change(page_key, direction, total_pages):
-    if direction == 'next' and st.session_state[page_key] < total_pages - 1:
+    if direction == 'next':
         st.session_state[page_key] += 1
-    elif direction == 'previous' and st.session_state[page_key] > 0:
+    elif direction == 'previous':
         st.session_state[page_key] -= 1
 
 # For 'Users With The Most Trades' section
@@ -609,13 +609,11 @@ with col1:
         if st.session_state.page_trade > 0:
             if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
                 handle_page_change('page_trade', 'previous', total_pages_trade)
-                handle_page_change('page_trade', 'previous', total_pages_trade)
             
     with col_right:
         # Disable "Next" on the last page
         if st.session_state.page_trade < total_pages_trade - 1:
             if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
-                handle_page_change('page_trade', 'next', total_pages_trade)
                 handle_page_change('page_trade', 'next', total_pages_trade)
 
 # For 'Users With The Most Volume' section
