@@ -591,8 +591,7 @@ def handle_page_change(page_key, direction, total_pages):
 col1, col2 = st.columns(2)
 
 with col1:
-    st.write("Users With The Most Trades")
-    
+    st.metric(label="Users With The Most Trades")
     # Get the paginated DataFrame
     df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
     
@@ -620,7 +619,7 @@ with col1:
 
 # For 'Users With The Most Volume' section
 with col2:
-    st.write("Users With The Most Volume")
+    st.metric(label="Users With The Most Volume")
     
     # Get the paginated DataFrame
     df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
