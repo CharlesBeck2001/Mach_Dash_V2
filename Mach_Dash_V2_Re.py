@@ -704,28 +704,19 @@ with col2:
                     handle_page_change('page_volume', 'next', total_pages_volume)
 
 
-# Step 2: Compute cumulative sums for each user, up to the Top 30 users
-cumulative_sums = [
-    df_trade_address["trade_count"][:i].sum() for i in range(1, min(len(df_trade_address), 30) + 1)
-]
+# Limit to the first 30 rows
+df_trade_rank = df_trade_rank.head(30)
 
-# Step 3: Create a DataFrame for the bar chart
-bars_df = pd.DataFrame({
-    "Top N Users": [f"Top {i}" for i in range(1, len(cumulative_sums) + 1)],
-    "Cumulative Trades": cumulative_sums
-})
-
-# Step 4: Plot using Plotly for interactivity
-fig = px.bar(
-    bars_df,
-    x="Top N Users",
-    y="Cumulative Trades",
-    title="Cumulative Trade Counts for Top N Users",
-    labels={"Cumulative Trades": "Trades", "Top N Users": "User Group"},
-    text="Cumulative Trades"
+# Create a histogram using Altair
+chart = alt.Chart(df_trade_rank).mark_bar().encode(
+    x=alt.X('N:O', title='Top N Users', axis=alt.Axis(labelAngle=-45)),
+    y=alt.Y('percentage:Q', title='Percentage of Total Trades'),
+    tooltip=['N', 'percentage']
+).properties(
+    title='Top N Users and Their Trade Percentages',
+    width=700,
+    height=400
 )
-fig.update_traces(textposition="outside", marker_color='skyblue')
-fig.update_layout(xaxis_tickangle=-45)
 
-# Step 5: Display in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+# Display in Streamlit
+st.altair_chart(chart, use_container_width=True)
