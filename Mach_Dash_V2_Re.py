@@ -715,7 +715,7 @@ fig = px.bar(
     y='percentage_of_total_trades',  # Percentage
     text='percentage_of_total_trades',  # Show percentage values on the bars
     labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
-    title='Top N Users and Their Trade Percentages',
+    title='Percentage of Total Trade Comprised of Up To the Top 10 Users In Terms of Most Trades',
 )
 
 # Customize the appearance
