@@ -566,6 +566,7 @@ if 'df_trade_address' not in st.session_state:
     st.session_state.page_volume = 0
 
 # Pagination function
+@st.cache_data
 def paginate_df(df, page=0, page_size=10):
     start_row = page * page_size
     end_row = start_row + page_size
