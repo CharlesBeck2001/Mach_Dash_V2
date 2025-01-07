@@ -605,14 +605,16 @@ with col1:
     col_left, col_right = st.columns([1, 1])
     
     with col_left:
-        # Handle previous button
-        if st.button('Previous', key='prev_trade'):
-            handle_page_change('page_trade', 'previous', total_pages_trade)
+        # Disable "Previous" on the first page
+        if st.session_state.page_trade > 0:
+            if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
+                handle_page_change('page_trade', 'previous', total_pages_trade)
             
     with col_right:
-        # Handle next button
-        if st.button('Next', key='next_trade'):
-            handle_page_change('page_trade', 'next', total_pages_trade)
+        # Disable "Next" on the last page
+        if st.session_state.page_trade < total_pages_trade - 1:
+            if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
+                handle_page_change('page_trade', 'next', total_pages_trade)
 
 # For 'Users With The Most Volume' section
 with col2:
@@ -631,11 +633,13 @@ with col2:
     col_left, col_right = st.columns([1, 1])
     
     with col_left:
-        # Handle previous button
-        if st.button('Previous', key='prev_volume'):
-            handle_page_change('page_volume', 'previous', total_pages_volume)
+        # Disable "Previous" on the first page
+        if st.session_state.page_volume > 0:
+            if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
+                handle_page_change('page_volume', 'previous', total_pages_volume)
             
     with col_right:
-        # Handle next button
-        if st.button('Next', key='next_volume'):
-            handle_page_change('page_volume', 'next', total_pages_volume)
+        # Disable "Next" on the last page
+        if st.session_state.page_volume < total_pages_volume - 1:
+            if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
+                handle_page_change('page_volume', 'next', total_pages_volume)
