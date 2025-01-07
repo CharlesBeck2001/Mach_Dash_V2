@@ -559,15 +559,55 @@ with col2:
     
 col1, col2 = st.columns(2)
 
+# Pagination function
+def paginate_df(df, page=0, page_size=10):
+    start_row = page * page_size
+    end_row = start_row + page_size
+    return df.iloc[start_row:end_row]
+
+# For 'Users With The Most Trades' section
 with col1:
-    
     st.write("Users With The Most Trades")
     
-    st.write(df_trade_address)
-
-with col2:
+    # Pagination state
+    if 'page_trade' not in st.session_state:
+        st.session_state.page_trade = 0
     
+    # Get the paginated DataFrame
+    df_paginated_trade = paginate_df(df_trade_address, st.session_state.page_trade)
+    
+    # Display the DataFrame
+    st.write(df_paginated_trade)
+    
+    # Buttons for pagination
+    col_left, col_right = st.columns([1, 1])
+    with col_left:
+        if st.button('Previous', key='prev_trade') and st.session_state.page_trade > 0:
+            st.session_state.page_trade -= 1
+    with col_right:
+        if st.button('Next', key='next_trade') and st.session_state.page_trade < len(df_trade_address) // 10:
+            st.session_state.page_trade += 1
+
+# For 'Users With The Most Volume' section
+with col2:
     st.write("Users With The Most Volume")
     
-    st.write(df_volume_address)
+    # Pagination state
+    if 'page_volume' not in st.session_state:
+        st.session_state.page_volume = 0
+    
+    # Get the paginated DataFrame
+    df_paginated_volume = paginate_df(df_volume_address, st.session_state.page_volume)
+    
+    # Display the DataFrame
+    st.write(df_paginated_volume)
+    
+    # Buttons for pagination
+    col_left, col_right = st.columns([1, 1])
+    with col_left:
+        if st.button('Previous', key='prev_volume') and st.session_state.page_volume > 0:
+            st.session_state.page_volume -= 1
+    with col_right:
+        if st.button('Next', key='next_volume') and st.session_state.page_volume < len(df_volume_address) // 10:
+            st.session_state.page_volume += 1
 
