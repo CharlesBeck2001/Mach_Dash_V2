@@ -710,9 +710,9 @@ st.write(df_trade_rank)
 fig = px.bar(
     df_trade_rank,
     x='n',  # Top N users
-    y='percentage',  # Percentage
-    text='percentage',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage': 'Percentage of Total Trades'},
+    y='percentage_of_total_trades',  # Percentage
+    text='percentage_of_total_trades',  # Show percentage values on the bars
+    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
     title='Top N Users and Their Trade Percentages',
 )
 
