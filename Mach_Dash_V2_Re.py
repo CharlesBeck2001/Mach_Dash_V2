@@ -396,7 +396,6 @@ INNER JOIN dest_volume_table dvt
     LIMIT 50
     """
     
-    @st.cache_data
     def execute_sql(query):
         headers = {
             "apikey": supabase_key,
