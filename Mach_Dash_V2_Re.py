@@ -600,16 +600,14 @@ with col1:
     with col_left:
         # Disable "Previous" on the first page
         if st.session_state.page_trade > 0:
-            if st.button('Previous', key='prev_trade'):
+            if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
                 st.session_state.page_trade -= 1
-                #st.experimental_rerun()  # Force immediate rerun to update page
     
     with col_right:
         # Disable "Next" on the last page
         if st.session_state.page_trade < total_pages_trade - 1:
-            if st.button('Next', key='next_trade'):
+            if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
                 st.session_state.page_trade += 1
-                #st.experimental_rerun()  # Force immediate rerun to update page
 
 # For 'Users With The Most Volume' section
 with col2:
@@ -630,13 +628,11 @@ with col2:
     with col_left:
         # Disable "Previous" on the first page
         if st.session_state.page_volume > 0:
-            if st.button('Previous', key='prev_volume'):
+            if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
                 st.session_state.page_volume -= 1
-                #st.experimental_rerun()  # Force immediate rerun to update page
     
     with col_right:
         # Disable "Next" on the last page
         if st.session_state.page_volume < total_pages_volume - 1:
-            if st.button('Next', key='next_volume'):
+            if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
                 st.session_state.page_volume += 1
-                #st.experimental_rerun()  # Force immediate rerun to update page
