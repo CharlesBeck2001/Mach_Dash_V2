@@ -562,8 +562,8 @@ col1, col2 = st.columns(2)
 if 'df_trade_address' not in st.session_state:
     st.session_state.df_trade_address = df_trade_address
     st.session_state.df_volume_address = df_volume_address
-    st.session_state.page_trade = 1
-    st.session_state.page_volume = 1
+    st.session_state.page_trade = 0
+    st.session_state.page_volume = 0
 
 # Pagination function
 @st.cache_data
@@ -603,6 +603,8 @@ with col1:
         # Disable "Next" if on the last page
         if st.button('Next', key='next_trade') and st.session_state.page_trade < total_pages_trade - 1:
             st.session_state.page_trade += 1
+        elif st.session_state.page_trade == 0:
+            st.session_state.page_trade = 0  # Ensure initial page is 0 if it isn't
 
 # For 'Users With The Most Volume' section
 with col2:
@@ -626,3 +628,5 @@ with col2:
         # Disable "Next" if on the last page
         if st.button('Next', key='next_volume') and st.session_state.page_volume < total_pages_volume - 1:
             st.session_state.page_volume += 1
+        elif st.session_state.page_volume == 0:
+            st.session_state.page_volume = 0  # Ensure initial page is 0 if it isn't
