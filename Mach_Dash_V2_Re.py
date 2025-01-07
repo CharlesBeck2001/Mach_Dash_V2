@@ -594,7 +594,7 @@ with col1:
     st.subheader("Users With The Most Trades")
     
     # Create two columns within col1 for the DataFrame and the pagination buttons
-    col_data, col_buttons = st.columns([3, 1])  # Adjust the ratios as needed
+    col_data, col_buttons = st.columns([1, 1])  # Adjust the ratios as needed
     
     with col_data:
         # Get the paginated DataFrame
@@ -621,7 +621,7 @@ with col2:
     st.subheader("Users With The Most Volume")
     
     # Create two columns within col2 for the DataFrame and the pagination buttons
-    col_data, col_buttons = st.columns([3, 1])  # Adjust the ratios as needed
+    col_data, col_buttons = st.columns([1, 1])  # Adjust the ratios as needed
     
     with col_data:
         # Get the paginated DataFrame
