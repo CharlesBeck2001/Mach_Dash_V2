@@ -395,7 +395,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY total_user_volume DESC
     LIMIT 50
     """
-    
+    @st.cache_data
     def execute_sql(query):
         headers = {
             "apikey": supabase_key,
@@ -631,7 +631,7 @@ with col2:
 
     renamed_df_volume = st.session_state.df_volume_address.rename(columns={
         'address': 'User ID',
-        'total_user_volume': 'Total Volume',
+        'total_volume': 'e',
         'another_column': 'Some Other Data'
     })
     # Get the paginated DataFrame
