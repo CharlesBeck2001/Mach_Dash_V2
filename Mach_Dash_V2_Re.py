@@ -562,8 +562,8 @@ col1, col2 = st.columns(2)
 if 'df_trade_address' not in st.session_state:
     st.session_state.df_trade_address = df_trade_address
     st.session_state.df_volume_address = df_volume_address
-    st.session_state.page_trade = 0
-    st.session_state.page_volume = 0
+    st.session_state.page_trade = 1
+    st.session_state.page_volume = 1
 
 # Pagination function
 @st.cache_data
