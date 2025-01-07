@@ -607,15 +607,15 @@ with col1:
     button_col_right = st.empty()
 
     # Add buttons below the table in their respective empty slots
-    if button_col_left:
-        with button_col_left:
+    if button_col_right:
+        with button_col_right:
             # Disable "Previous" on the first page
             if st.session_state.page_trade > 0:
                 if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
                     handle_page_change('page_trade', 'previous', total_pages_trade)
 
-    if button_col_right:
-        with button_col_right:
+    if button_col_left:
+        with button_col_left:
             # Disable "Next" on the last page
             if st.session_state.page_trade < total_pages_trade - 1:
                 if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
@@ -639,15 +639,15 @@ with col2:
     button_col_right = st.empty()
 
     # Add buttons below the table in their respective empty slots
-    if button_col_left:
-        with button_col_left:
+    if button_col_right:
+        with button_col_right:
             # Disable "Previous" on the first page
             if st.session_state.page_volume > 0:
                 if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
                     handle_page_change('page_volume', 'previous', total_pages_volume)
 
-    if button_col_right:
-        with button_col_right:
+    if button_col_left:
+        with button_col_left:
             # Disable "Next" on the last page
             if st.session_state.page_volume < total_pages_volume - 1:
                 if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
