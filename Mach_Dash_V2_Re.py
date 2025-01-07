@@ -707,7 +707,7 @@ with col2:
 df_trade_rank = df_trade_rank.head(10)
 
 # Truncate 'percentage' to one decimal place
-df_trade_rank['percentage'] = df_trade_rank['percentage'].round(1)
+df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
 # Create the bar chart
 fig = px.bar(
     df_trade_rank,
