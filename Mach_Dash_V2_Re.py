@@ -705,7 +705,7 @@ with col2:
 
 # Limit to the first 30 rows
 df_trade_rank = df_trade_rank.head(30)
-
+st.write(df_trade_rank)
 # Create the bar chart
 fig = px.bar(
     df_trade_rank,
