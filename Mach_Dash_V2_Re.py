@@ -594,7 +594,7 @@ with col1:
     st.subheader("Users With The Most Trades")
 
     renamed_df_trade = st.session_state.df_trade_address.rename(columns={
-        'user_id': 'User ID',
+        'address': 'User ID',
         'trade_count': 'Number of Trades',
         'some_other_column': 'Other Info'
     })
@@ -631,8 +631,8 @@ with col2:
     st.subheader("Users With The Most Volume")
 
     renamed_df_volume = st.session_state.df_volume_address.rename(columns={
-        'user_id': 'User ID',
-        'total_volume': 'Total Volume',
+        'address': 'User ID',
+        'total_user_volume': 'Total Volume',
         'another_column': 'Some Other Data'
     })
     # Get the paginated DataFrame
