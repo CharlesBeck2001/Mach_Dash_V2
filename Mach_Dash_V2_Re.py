@@ -631,7 +631,7 @@ with col2:
 
     renamed_df_volume = st.session_state.df_volume_address.rename(columns={
         'address': 'User ID',
-        'total_volume': 'e',
+        'total_user_volume': 'Volume',
         'another_column': 'Some Other Data'
     })
     # Get the paginated DataFrame
