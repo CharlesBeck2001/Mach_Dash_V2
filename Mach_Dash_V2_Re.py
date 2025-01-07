@@ -588,10 +588,7 @@ def handle_page_change(page_key, direction, total_pages):
     st.rerun()
 
 # For 'Users With The Most Trades' section
-col1, col2 = st.columns(2)
-
-# For 'Users With The Most Trades' section
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([2, 2])  # Adjust the width to match your content layout
 
 with col1:
     st.subheader("Users With The Most Trades")
@@ -605,16 +602,16 @@ with col1:
     # Calculate total pages for trade data
     total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
     
-    # Create two columns for the buttons below the DataFrame
-    col_left, col_right = st.columns([1, 1])
+    # Create columns for the buttons below the DataFrame
+    button_col_left, button_col_right = st.columns([2, 2])  # Match width with col1
     
-    with col_left:
+    with button_col_left:
         # Disable "Previous" on the first page
         if st.session_state.page_trade > 0:
             if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
                 handle_page_change('page_trade', 'previous', total_pages_trade)
             
-    with col_right:
+    with button_col_right:
         # Disable "Next" on the last page
         if st.session_state.page_trade < total_pages_trade - 1:
             if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
@@ -633,16 +630,16 @@ with col2:
     # Calculate total pages for volume data
     total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
     
-    # Create two columns for the buttons below the DataFrame
-    col_left, col_right = st.columns([1, 1])
+    # Create columns for the buttons below the DataFrame
+    button_col_left, button_col_right = st.columns([2, 2])  # Match width with col2
     
-    with col_left:
+    with button_col_left:
         # Disable "Previous" on the first page
         if st.session_state.page_volume > 0:
             if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
                 handle_page_change('page_volume', 'previous', total_pages_volume)
             
-    with col_right:
+    with button_col_right:
         # Disable "Next" on the last page
         if st.session_state.page_volume < total_pages_volume - 1:
             if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
