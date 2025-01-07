@@ -516,7 +516,6 @@ with col2:
 with col3:
     st.metric(label="Total Trades", value=f"{trade_count:,}")
 
-
 # Additional styling for more customization (optional)
 st.markdown(
     """
@@ -559,6 +558,13 @@ with col2:
     
 col1, col2 = st.columns(2)
 
+# Initialize session state if not already present
+if 'df_trade_address' not in st.session_state:
+    st.session_state.df_trade_address = df_trade_address
+    st.session_state.df_volume_address = df_volume_address
+    st.session_state.page_trade = 0
+    st.session_state.page_volume = 0
+
 # Pagination function
 def paginate_df(df, page=0, page_size=10):
     start_row = page * page_size
@@ -569,12 +575,8 @@ def paginate_df(df, page=0, page_size=10):
 with col1:
     st.write("Users With The Most Trades")
     
-    # Pagination state
-    if 'page_trade' not in st.session_state:
-        st.session_state.page_trade = 0
-    
     # Get the paginated DataFrame
-    df_paginated_trade = paginate_df(df_trade_address, st.session_state.page_trade)
+    df_paginated_trade = paginate_df(st.session_state.df_trade_address, st.session_state.page_trade)
     
     # Display the DataFrame
     st.write(df_paginated_trade)
@@ -585,19 +587,15 @@ with col1:
         if st.button('Previous', key='prev_trade') and st.session_state.page_trade > 0:
             st.session_state.page_trade -= 1
     with col_right:
-        if st.button('Next', key='next_trade') and st.session_state.page_trade < len(df_trade_address) // 10:
+        if st.button('Next', key='next_trade') and st.session_state.page_trade < len(st.session_state.df_trade_address) // 10:
             st.session_state.page_trade += 1
 
 # For 'Users With The Most Volume' section
 with col2:
     st.write("Users With The Most Volume")
     
-    # Pagination state
-    if 'page_volume' not in st.session_state:
-        st.session_state.page_volume = 0
-    
     # Get the paginated DataFrame
-    df_paginated_volume = paginate_df(df_volume_address, st.session_state.page_volume)
+    df_paginated_volume = paginate_df(st.session_state.df_volume_address, st.session_state.page_volume)
     
     # Display the DataFrame
     st.write(df_paginated_volume)
@@ -608,6 +606,5 @@ with col2:
         if st.button('Previous', key='prev_volume') and st.session_state.page_volume > 0:
             st.session_state.page_volume -= 1
     with col_right:
-        if st.button('Next', key='next_volume') and st.session_state.page_volume < len(df_volume_address) // 10:
+        if st.button('Next', key='next_volume') and st.session_state.page_volume < len(st.session_state.df_volume_address) // 10:
             st.session_state.page_volume += 1
-
