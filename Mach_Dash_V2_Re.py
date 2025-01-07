@@ -599,7 +599,7 @@ with col1:
         'some_other_column': 'Other Info'
     })
     # Get the paginated DataFrame
-    df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
+    df_paginated_trade = paginate_df(st.session_state.renamed_df_trade, st.session_state.page_trade)
     
     # Display the DataFrame
     st.write(df_paginated_trade)
@@ -636,7 +636,7 @@ with col2:
         'another_column': 'Some Other Data'
     })
     # Get the paginated DataFrame
-    df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
+    df_paginated_volume = paginate_df(st.session_state.renamed_df_volume, st.session_state.page_volume)
     
     # Display the DataFrame
     st.write(df_paginated_volume)
