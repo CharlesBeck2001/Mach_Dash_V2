@@ -540,7 +540,6 @@ INNER JOIN dest_volume_table dvt
 col1, col2, col3 = st.columns(3)
 
 total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
-st.write(df_trade_rank)
 # Box 1
 with col1:
     st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
@@ -707,16 +706,23 @@ with col2:
 # Limit to the first 30 rows
 df_trade_rank = df_trade_rank.head(30)
 
-# Create a histogram using Altair
-chart = alt.Chart(df_trade_rank).mark_bar().encode(
-    x=alt.X('N:O', title='Top N Users', axis=alt.Axis(labelAngle=-45)),
-    y=alt.Y('percentage:Q', title='Percentage of Total Trades'),
-    tooltip=['N', 'percentage']
-).properties(
+# Create the bar chart
+fig = px.bar(
+    df_trade_rank,
+    x='N',  # Top N users
+    y='percentage',  # Percentage
+    text='percentage',  # Show percentage values on the bars
+    labels={'N': 'Top N Users', 'percentage': 'Percentage of Total Trades'},
     title='Top N Users and Their Trade Percentages',
-    width=700,
-    height=400
 )
 
-# Display in Streamlit
-st.altair_chart(chart, use_container_width=True)
+# Customize the appearance
+fig.update_traces(marker_color='blue', textposition='outside')
+fig.update_layout(
+    template='plotly_white',
+    height=500,
+    width=800
+)
+
+# Show chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
