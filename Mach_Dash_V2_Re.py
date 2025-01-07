@@ -393,7 +393,7 @@ INNER JOIN dest_volume_table dvt
     ) AS combined_addresses
     GROUP BY address
     ORDER BY total_user_volume DESC
-    LIMIT 50
+    LIMIT 200
     """
     @st.cache_data
     def execute_sql(query):
