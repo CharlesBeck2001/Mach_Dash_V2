@@ -771,13 +771,28 @@ fig.update_layout(
 # Show chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
-
 # Supabase credentials
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
 supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
 
-# SQL query to fetch the data
-sql_query = """  
+# SQL query
+def execute_sql(query):
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
+        "Content-Type": "application/json"
+    }
+    rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
+    payload = {"query": query}
+    response = requests.post(rpc_endpoint, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        return pd.DataFrame(data)
+    else:
+        print("Error executing query:", response.status_code, response.json())
+        return pd.DataFrame()
+
+sql_query = """
 WITH source_volume_table AS(
   SELECT DISTINCT
     op.*, 
@@ -790,7 +805,7 @@ WITH source_volume_table AS(
   INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
   INNER JOIN token_info ti
-    ON op.source_asset = ti.address  -- Get source asset decimals
+    ON op.source_asset = ti.address
   INNER JOIN coingecko_assets_list cal
     ON op.source_asset = cal.address
   INNER JOIN coingecko_market_data cmd 
@@ -808,7 +823,7 @@ dest_volume_table AS(
   INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
   INNER JOIN token_info ti
-    ON op.dest_asset = ti.address  -- Get source asset decimals
+    ON op.dest_asset = ti.address
   INNER JOIN coingecko_assets_list cal
     ON op.dest_asset = cal.address
   INNER JOIN coingecko_market_data cmd 
@@ -840,97 +855,50 @@ GROUP BY
     source_chain, source_id, dest_chain, dest_id
 ORDER BY 
     total_source_volume DESC
-LIMIT 1000
 """
 
-def execute_sql(query):
-    headers = {
-        "apikey": supabase_key,
-        "Authorization": f"Bearer {supabase_key}",
-        "Content-Type": "application/json"
-    }
-    rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
-    payload = {"query": query}
+data = execute_sql(sql_query)
 
-    response = requests.post(rpc_endpoint, headers=headers, json=payload)
-    if response.status_code == 200:
-        data = response.json()
-        return pd.DataFrame(data)
-    else:
-        print("Error executing query:", response.status_code, response.json())
-        return pd.DataFrame()
+data["source"] = data["source_id"] + " (S)"
+data["destination"] = data["dest_id"] + " (D)"
 
-# Fetch data
-df_volume_flow_chart = execute_sql(sql_query)
-df_volume_flow_chart = pd.json_normalize(df_volume_flow_chart['result'])
+# Create separate dataframes for assets and chains
+asset_data = data[["source", "destination", "total_source_volume", "total_dest_volume"]].copy()
+chain_data = data[["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
 
-# Separate trade volume into source and destination datapoints
-df_volume_flow_chart['source_asset'] = df_volume_flow_chart['source_id'] + " (S)"
-df_volume_flow_chart['dest_asset'] = df_volume_flow_chart['dest_id'] + " (D)"
-df_volume_flow_chart['source_chain_label'] = df_volume_flow_chart['source_chain'] + " (S)"
-df_volume_flow_chart['dest_chain_label'] = df_volume_flow_chart['dest_chain'] + " (D)"
+# Filter top 10 by volume
+asset_data = asset_data.nlargest(10, "total_source_volume")
+chain_data = chain_data.nlargest(10, "total_source_volume")
 
-# Generate lists of unique labels for nodes (assets and chains)
-asset_nodes = list(set(df_volume_flow_chart['source_asset']).union(set(df_volume_flow_chart['dest_asset'])))
-chain_nodes = list(set(df_volume_flow_chart['source_chain_label']).union(set(df_volume_flow_chart['dest_chain_label'])))
+# Create Sankey chart for assets
+def create_sankey_chart(df, source_col, target_col, value_col):
+    unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
+    node_map = {node: i for i, node in enumerate(unique_nodes)}
 
-# Map nodes to indices for Sankey chart
-def map_indices(df, source_col, dest_col, nodes):
-    source_indices = df[source_col].map(nodes.index).tolist()
-    dest_indices = df[dest_col].map(nodes.index).tolist()
-    values = df['total_source_volume'].tolist()
-    return source_indices, dest_indices, values
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="black", width=0.5),
+            label=unique_nodes
+        ),
+        link=dict(
+            source=df[source_col].map(node_map),
+            target=df[target_col].map(node_map),
+            value=df[value_col]
+        )
+    )])
+    return fig
 
-# Prepare data for asset flow chart
-asset_source_indices, asset_dest_indices, asset_values = map_indices(
-    df_volume_flow_chart, 'source_asset', 'dest_asset', asset_nodes
-)
+st.title("Flow Charts")
 
-# Prepare data for chain flow chart
-chain_source_indices, chain_dest_indices, chain_values = map_indices(
-    df_volume_flow_chart, 'source_chain_label', 'dest_chain_label', chain_nodes
-)
-
-# Streamlit app
-st.title("Flow Charts: Asset and Chain Volumes")
-
-# Asset flow chart
 st.subheader("Asset Flow Chart")
-asset_fig = go.Figure(data=[go.Sankey(
-    node=dict(
-        pad=15,
-        thickness=20,
-        line=dict(color="black", width=0.5),
-        label=asset_nodes,
-        color="blue"
-    ),
-    link=dict(
-        source=asset_source_indices,
-        target=asset_dest_indices,
-        value=asset_values,
-        color="rgba(255, 0, 0, 0.4)"
-    )
-)])
-st.plotly_chart(asset_fig)
+asset_chart = create_sankey_chart(asset_data, "source", "destination", "total_source_volume")
+st.plotly_chart(asset_chart)
 
-# Chain flow chart
 st.subheader("Chain Flow Chart")
-chain_fig = go.Figure(data=[go.Sankey(
-    node=dict(
-        pad=15,
-        thickness=20,
-        line=dict(color="black", width=0.5),
-        label=chain_nodes,
-        color="green"
-    ),
-    link=dict(
-        source=chain_source_indices,
-        target=chain_dest_indices,
-        value=chain_values,
-        color="rgba(0, 0, 255, 0.4)"
-    )
-)])
-st.plotly_chart(chain_fig)
+chain_chart = create_sankey_chart(chain_data, "source_chain", "dest_chain", "total_source_volume")
+st.plotly_chart(chain_chart)
 
 if 1 == 1:
 
