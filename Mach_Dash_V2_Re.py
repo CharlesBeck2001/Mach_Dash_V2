@@ -905,8 +905,13 @@ top_chain_data = data[
     data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
 ][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
 
-st.write(top_chain_data)
-st.write(top_asset_data)
+# Compute average volume for assets and chains
+top_asset_data["avg_volume"] = (top_asset_data["total_source_volume"] + top_asset_data["total_dest_volume"]) / 2
+top_chain_data["avg_volume"] = (top_chain_data["total_source_volume"] + top_chain_data["total_dest_volume"]) / 2
+
+# Sort by avg_volume and select top 10 rows
+top_asset_data = top_asset_data.nlargest(10, "avg_volume")
+top_chain_data = top_chain_data.nlargest(10, "avg_volume")
 # Adjust Sankey function to handle filtered dataframes
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
