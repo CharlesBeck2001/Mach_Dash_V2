@@ -1216,60 +1216,6 @@ if 1 == 1:
         # Display the sorted table
         st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
 
-# Initialize session state if not already present
-if 'df_trade_address' not in st.session_state:
-    st.session_state.df_trade_address = df_trade_address
-    st.session_state.df_volume_address = df_volume_address
-    st.session_state.page_trade = 0
-    st.session_state.page_volume = 0
-
-# Pagination function
-@st.cache_data
-def paginate_df(df, page=0, page_size=10):
-    start_row = page * page_size
-    end_row = start_row + page_size
-    return df.iloc[start_row:end_row]
-
-# Calculate total pages for trade and volume data
-def calculate_total_pages(df, page_size=10):
-    total_pages = len(df) // page_size
-    if len(df) % page_size != 0:
-        total_pages += 1  # Account for remaining rows if not divisible by page_size
-    return total_pages
-
-# Helper function to trigger state change
-def handle_page_change(page_key, direction, total_pages):
-    if direction == 'next':
-        st.session_state[page_key] += 1
-    elif direction == 'previous':
-        st.session_state[page_key] -= 1
-    st.rerun()
-
-# Limit to the first 30 rows
-df_trade_rank = df_trade_rank.head(10)
-
-# Truncate 'percentage' to one decimal place
-df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_trade_rank,
-    x='n',  # Top N users
-    y='percentage_of_total_trades',  # Percentage
-    text='percentage_of_total_trades',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
-    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
 
 # Limit to the first 30 rows
 df_volume_rank = df_volume_rank.head(10)
