@@ -663,9 +663,8 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-col1, col2 = st.columns(2)
 st.title("Volume Analysis")
+col1, col2 = st.columns(2)
 with col1:
     st.subheader("Total Volume")
     daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
