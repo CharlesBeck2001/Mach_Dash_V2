@@ -905,6 +905,8 @@ top_chain_data = data[
     data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
 ][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
 
+st.write(top_chain_data)
+st.write(top_asset_data)
 # Adjust Sankey function to handle filtered dataframes
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
