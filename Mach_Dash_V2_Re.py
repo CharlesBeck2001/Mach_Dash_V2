@@ -741,7 +741,7 @@ fig.update_layout(
     height=500,
     width=800
 )
-
+st.subheader("User Portion by Trade")
 # Show chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
@@ -766,7 +766,7 @@ fig.update_layout(
     height=500,
     width=800
 )
-
+st.subheader("User Portion by Volume")
 # Show chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
