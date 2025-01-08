@@ -832,10 +832,10 @@ df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_tot
 # Create the bar chart
 fig = px.bar(
     df_volume_rank,
-    x='n',  # Top N users
+    x='top_n',  # Top N users
     y='percentage_of_total_volume',  # Percentage
     text='percentage_of_total_volume',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
+    labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
     title='Percentage of Total Trade Comprised of Up To the Top 10 Users In Terms of Most Trades',
 )
 
