@@ -881,10 +881,10 @@ asset_volume = asset_volume.groupby("asset")["total_volume"].sum().reset_index()
 # Get top 10 assets by total volume
 top_assets = asset_volume.nlargest(10, "total_volume")["asset"]
 
-# Filter data for top assets
-asset_data = data[
+# Create a new dataframe for the top 10 assets
+top_asset_data = data[
     data["source_id"].isin(top_assets) | data["dest_id"].isin(top_assets)
-]
+][["source_id", "dest_id", "total_source_volume", "total_dest_volume"]].copy()
 
 # Compute total volume for chains
 source_chain_volume = data.groupby("source_chain")["total_source_volume"].sum().reset_index()
@@ -900,18 +900,18 @@ chain_volume = chain_volume.groupby("chain")["total_volume"].sum().reset_index()
 # Get top 10 chains by total volume
 top_chains = chain_volume.nlargest(10, "total_volume")["chain"]
 
-# Filter data for top chains
-chain_data = data[
+# Create a new dataframe for the top 10 chains
+top_chain_data = data[
     data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
-]
+][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
 
-st.write(top_assets)
-st.write(top_chains)
-
-# Create Sankey chart function
+# Adjust Sankey function to handle filtered dataframes
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
     node_map = {node: i for i, node in enumerate(unique_nodes)}
+
+    # Aggregate source and destination values for the Sankey chart
+    df["value"] = df[value_col]
 
     fig = go.Figure(data=[go.Sankey(
         node=dict(
@@ -923,7 +923,7 @@ def create_sankey_chart(df, source_col, target_col, value_col):
         link=dict(
             source=df[source_col].map(node_map),
             target=df[target_col].map(node_map),
-            value=df[value_col]
+            value=df["value"]
         )
     )])
     return fig
@@ -933,13 +933,13 @@ st.title("Flow Charts")
 
 st.subheader("Asset Flow Chart")
 asset_chart = create_sankey_chart(
-    asset_data, "source_id", "dest_id", "total_source_volume"
+    top_asset_data, "source_id", "dest_id", "total_source_volume"
 )
 st.plotly_chart(asset_chart)
 
 st.subheader("Chain Flow Chart")
 chain_chart = create_sankey_chart(
-    chain_data, "source_chain", "dest_chain", "total_source_volume"
+    top_chain_data, "source_chain", "dest_chain", "total_source_volume"
 )
 st.plotly_chart(chain_chart)
 
