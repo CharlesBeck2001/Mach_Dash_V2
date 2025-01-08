@@ -718,6 +718,57 @@ def handle_page_change(page_key, direction, total_pages):
         st.session_state[page_key] -= 1
     st.rerun()
 
+# Limit to the first 30 rows
+df_trade_rank = df_trade_rank.head(10)
+
+# Truncate 'percentage' to one decimal place
+df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
+# Create the bar chart
+fig = px.bar(
+    df_trade_rank,
+    x='n',  # Top N users
+    y='percentage_of_total_trades',  # Percentage
+    text='percentage_of_total_trades',  # Show percentage values on the bars
+    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
+    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
+)
+
+# Customize the appearance
+fig.update_traces(marker_color='blue', textposition='outside')
+fig.update_layout(
+    template='plotly_white',
+    height=500,
+    width=800
+)
+
+# Show chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+# Limit to the first 30 rows
+df_volume_rank = df_volume_rank.head(10)
+# Truncate 'percentage' to one decimal place
+df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_total_volume'].round(1)
+# Create the bar chart
+fig = px.bar(
+    df_volume_rank,
+    x='top_n',  # Top N users
+    y='percentage_of_total_volume',  # Percentage
+    text='percentage_of_total_volume',  # Show percentage values on the bars
+    labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
+    title='Percentage of Total Volume Comprised of Up To the Top 10 Users In Terms of Most Trades',
+)
+
+# Customize the appearance
+fig.update_traces(marker_color='blue', textposition='outside')
+fig.update_layout(
+    template='plotly_white',
+    height=500,
+    width=800
+)
+
+# Show chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 with col1:
@@ -795,55 +846,3 @@ with col2:
             if st.session_state.page_volume < total_pages_volume - 1:
                 if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
                     handle_page_change('page_volume', 'next', total_pages_volume)
-
-
-# Limit to the first 30 rows
-df_trade_rank = df_trade_rank.head(10)
-
-# Truncate 'percentage' to one decimal place
-df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_trade_rank,
-    x='n',  # Top N users
-    y='percentage_of_total_trades',  # Percentage
-    text='percentage_of_total_trades',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
-    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
-
-# Limit to the first 30 rows
-df_volume_rank = df_volume_rank.head(10)
-# Truncate 'percentage' to one decimal place
-df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_total_volume'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_volume_rank,
-    x='top_n',  # Top N users
-    y='percentage_of_total_volume',  # Percentage
-    text='percentage_of_total_volume',  # Show percentage values on the bars
-    labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
-    title='Percentage of Total Volume Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
