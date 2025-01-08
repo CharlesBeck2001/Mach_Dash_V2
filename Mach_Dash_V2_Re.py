@@ -905,13 +905,37 @@ top_chain_data = data[
     data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
 ][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
 
-# Compute average volume for assets and chains
-top_asset_data["avg_volume"] = (top_asset_data["total_source_volume"] + top_asset_data["total_dest_volume"]) / 2
-top_chain_data["avg_volume"] = (top_chain_data["total_source_volume"] + top_chain_data["total_dest_volume"]) / 2
+# Consolidate data for assets by grouping and summing volumes
+consolidated_asset_data = top_asset_data.groupby(
+    ["source_id", "dest_id"], as_index=False
+).agg({
+    "total_source_volume": "sum",
+    "total_dest_volume": "sum"
+})
 
-# Sort by avg_volume and select top 10 rows
-top_asset_data = top_asset_data.nlargest(10, "avg_volume")
-top_chain_data = top_chain_data.nlargest(10, "avg_volume")
+# Compute average volume for consolidated asset data
+consolidated_asset_data["avg_volume"] = (
+    consolidated_asset_data["total_source_volume"] + consolidated_asset_data["total_dest_volume"]
+) / 2
+
+# Select top 10 rows based on avg_volume
+top_asset_data = consolidated_asset_data.nlargest(10, "avg_volume")
+
+# Consolidate data for chains by grouping and summing volumes
+consolidated_chain_data = top_chain_data.groupby(
+    ["source_chain", "dest_chain"], as_index=False
+).agg({
+    "total_source_volume": "sum",
+    "total_dest_volume": "sum"
+})
+
+# Compute average volume for consolidated chain data
+consolidated_chain_data["avg_volume"] = (
+    consolidated_chain_data["total_source_volume"] + consolidated_chain_data["total_dest_volume"]
+) / 2
+
+# Select top 10 rows based on avg_volume
+top_chain_data = consolidated_chain_data.nlargest(10, "avg_volume")
 # Adjust Sankey function to handle filtered dataframes
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
