@@ -785,78 +785,71 @@ col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 with col1:
     st.subheader("Users With The Most Trades")
 
+    # Rename columns for clarity
     renamed_df_trade = st.session_state.df_trade_address.rename(columns={
         'address': 'User ID',
         'trade_count': 'Number of Trades',
+        'percentage_of_total_trades': '% of Total Trades',
         'some_other_column': 'Other Info'
     })
+
     # Get the paginated DataFrame
     df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
 
+    # Add index starting at 1 for display
     df_paginated_trade.index = df_paginated_trade.index + 1
-    
+
     # Display the DataFrame
     st.write(df_paginated_trade)
-    
+
     # Calculate total pages for trade data
     total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
-    
-    # Use st.empty() to make sure the buttons are placed directly under the table
+
+    # Use st.empty() to ensure buttons are properly placed
     button_col_left = st.empty()
     button_col_right = st.empty()
 
-    # Add buttons below the table in their respective empty slots
-    if button_col_right:
-        with button_col_right:
-            # Disable "Previous" on the first page
-            if st.session_state.page_trade > 0:
-                if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):  # Unique key per page
-                    handle_page_change('page_trade', 'previous', total_pages_trade)
+    # Add buttons for pagination
+    if st.session_state.page_trade > 0:
+        if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):
+            handle_page_change('page_trade', 'previous', total_pages_trade)
 
-    if button_col_left:
-        with button_col_left:
-            # Disable "Next" on the last page
-            if st.session_state.page_trade < total_pages_trade - 1:
-                if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):  # Unique key per page
-                    handle_page_change('page_trade', 'next', total_pages_trade)
+    if st.session_state.page_trade < total_pages_trade - 1:
+        if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):
+            handle_page_change('page_trade', 'next', total_pages_trade)
 
 # For 'Users With The Most Volume' section
 with col2:
     st.subheader("Users With The Most Volume")
 
+    # Rename columns for clarity
     renamed_df_volume = st.session_state.df_volume_address.rename(columns={
         'address': 'User ID',
         'total_user_volume': 'Volume',
+        'percentage_of_total_volume': '% of Total Volume',
         'another_column': 'Some Other Data'
     })
+
     # Get the paginated DataFrame
     df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
 
+    # Add index starting at 1 for display
     df_paginated_volume.index = df_paginated_volume.index + 1
+
     # Display the DataFrame
     st.write(df_paginated_volume)
-    
+
     # Calculate total pages for volume data
     total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
-    
-    # Use st.empty() to make sure the buttons are placed directly under the table
-    button_col_left = st.empty()
-    button_col_right = st.empty()
 
-    # Add buttons below the table in their respective empty slots
-    if button_col_right:
-        with button_col_right:
-            # Disable "Previous" on the first page
-            if st.session_state.page_volume > 0:
-                if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):  # Unique key per page
-                    handle_page_change('page_volume', 'previous', total_pages_volume)
+    # Add buttons for pagination
+    if st.session_state.page_volume > 0:
+        if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):
+            handle_page_change('page_volume', 'previous', total_pages_volume)
 
-    if button_col_left:
-        with button_col_left:
-            # Disable "Next" on the last page
-            if st.session_state.page_volume < total_pages_volume - 1:
-                if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
-                    handle_page_change('page_volume', 'next', total_pages_volume)
+    if st.session_state.page_volume < total_pages_volume - 1:
+        if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):
+            handle_page_change('page_volume', 'next', total_pages_volume)
 
 # Supabase credentials
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
