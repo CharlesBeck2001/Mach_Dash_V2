@@ -857,20 +857,55 @@ ORDER BY
     total_source_volume DESC
 """
 
+# Fetch and normalize data
 data = execute_sql(sql_query)
 data = pd.json_normalize(data['result'])
-data["source"] = data["source_id"] + " (S)"
-data["destination"] = data["dest_id"] + " (D)"
 
-# Create separate dataframes for assets and chains
-asset_data = data[["source", "destination", "total_source_volume", "total_dest_volume"]].copy()
-chain_data = data[["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
+# Label sources and destinations for assets and chains
+data["source_chain"] = data["source_chain"] + " (S)"
+data["dest_chain"] = data["dest_chain"] + " (D)"
+data["source_id"] = data["source_id"] + " (S)"
+data["dest_id"] = data["dest_id"] + " (D)"
 
-# Filter top 10 by volume
-asset_data = asset_data.nlargest(10, "total_source_volume")
-chain_data = chain_data.nlargest(10, "total_source_volume")
+# Compute total volume for assets
+source_asset_volume = data.groupby("source_id")["total_source_volume"].sum().reset_index()
+dest_asset_volume = data.groupby("dest_id")["total_dest_volume"].sum().reset_index()
 
-# Create Sankey chart for assets
+# Combine source and destination volumes for assets
+asset_volume = pd.concat([
+    source_asset_volume.rename(columns={"source_id": "asset", "total_source_volume": "total_volume"}),
+    dest_asset_volume.rename(columns={"dest_id": "asset", "total_dest_volume": "total_volume"})
+])
+asset_volume = asset_volume.groupby("asset")["total_volume"].sum().reset_index()
+
+# Get top 10 assets by total volume
+top_assets = asset_volume.nlargest(10, "total_volume")["asset"]
+
+# Filter data for top assets
+asset_data = data[
+    data["source_id"].isin(top_assets) | data["dest_id"].isin(top_assets)
+]
+
+# Compute total volume for chains
+source_chain_volume = data.groupby("source_chain")["total_source_volume"].sum().reset_index()
+dest_chain_volume = data.groupby("dest_chain")["total_dest_volume"].sum().reset_index()
+
+# Combine source and destination volumes for chains
+chain_volume = pd.concat([
+    source_chain_volume.rename(columns={"source_chain": "chain", "total_source_volume": "total_volume"}),
+    dest_chain_volume.rename(columns={"dest_chain": "chain", "total_dest_volume": "total_volume"})
+])
+chain_volume = chain_volume.groupby("chain")["total_volume"].sum().reset_index()
+
+# Get top 10 chains by total volume
+top_chains = chain_volume.nlargest(10, "total_volume")["chain"]
+
+# Filter data for top chains
+chain_data = data[
+    data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
+]
+
+# Create Sankey chart function
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
     node_map = {node: i for i, node in enumerate(unique_nodes)}
@@ -890,14 +925,19 @@ def create_sankey_chart(df, source_col, target_col, value_col):
     )])
     return fig
 
+# Generate and display charts
 st.title("Flow Charts")
 
 st.subheader("Asset Flow Chart")
-asset_chart = create_sankey_chart(asset_data, "source", "destination", "total_source_volume")
+asset_chart = create_sankey_chart(
+    asset_data, "source_id", "dest_id", "total_source_volume"
+)
 st.plotly_chart(asset_chart)
 
 st.subheader("Chain Flow Chart")
-chain_chart = create_sankey_chart(chain_data, "source_chain", "dest_chain", "total_source_volume")
+chain_chart = create_sankey_chart(
+    chain_data, "source_chain", "dest_chain", "total_source_volume"
+)
 st.plotly_chart(chain_chart)
 
 if 1 == 1:
