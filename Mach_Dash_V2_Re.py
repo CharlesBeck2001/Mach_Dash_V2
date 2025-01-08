@@ -906,7 +906,7 @@ chain_data = data[
 ]
 
 st.write(chain_data)
-st.wrote(asset_data)
+st.write(asset_data)
 
 # Create Sankey chart function
 def create_sankey_chart(df, source_col, target_col, value_col):
