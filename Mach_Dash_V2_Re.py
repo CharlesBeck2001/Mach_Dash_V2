@@ -517,7 +517,7 @@ INNER JOIN dest_volume_table dvt
         rank AS top_n,
         percentage_of_total_volume
     FROM cumulative_volume_table
-    WHERE rank <= 300;
+    WHERE rank <= 300
     """
     
     @st.cache_data
