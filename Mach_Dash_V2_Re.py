@@ -718,7 +718,7 @@ def handle_page_change(page_key, direction, total_pages):
     elif direction == 'previous':
         st.session_state[page_key] -= 1
     st.rerun()
-
+st.title("User Analysis")
 # Limit to the first 30 rows
 df_trade_rank = df_trade_rank.head(10)
 
