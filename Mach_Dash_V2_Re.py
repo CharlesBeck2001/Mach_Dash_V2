@@ -813,6 +813,7 @@ def execute_sql(query):
 
 # Fetch data
 df_volume_flow_chart = execute_sql(sql_query)
+df_volume_flow_chart = pd.json_normalize(df_volume_flow_chart['result'])
 
 # Separate trade volume into source and destination datapoints
 df_volume_flow_chart['source_asset'] = df_volume_flow_chart['source_id'] + " (S)"
