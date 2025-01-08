@@ -640,7 +640,7 @@ total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
 with col1:
     st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
     #st.line_chart(data["A"])
-
+    
 # Box 2
 with col2:
     st.metric(label="Total  Users", value=len(df_total_users))
@@ -648,6 +648,7 @@ with col2:
     
 with col3:
     st.metric(label="Total Trades", value=f"{trade_count:,}")
+    total_trades = trade_count
 
 # Additional styling for more customization (optional)
 st.markdown(
@@ -769,6 +770,15 @@ fig.update_layout(
 st.subheader("User Portion by Volume")
 # Show chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
+
+# Add percentage columns to session state dataframes
+st.session_state.df_trade_address['percentage_of_total_trades'] = (
+    st.session_state.df_trade_address['trade_count'] / total_trades * 100
+).round(2)
+
+st.session_state.df_volume_address['percentage_of_total_volume'] = (
+    st.session_state.df_volume_address['total_user_volume'] / total_volume * 100
+).round(2)
 
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
