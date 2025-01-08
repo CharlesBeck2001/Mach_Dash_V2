@@ -846,3 +846,263 @@ with col2:
             if st.session_state.page_volume < total_pages_volume - 1:
                 if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):  # Unique key per page
                     handle_page_change('page_volume', 'next', total_pages_volume)
+
+
+
+if 1 == 1:
+
+    # Supabase credentials
+    supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
+    supabase_key = st.secrets["supabase_key"]
+    
+    sql_query1 = """
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            cal.chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.source_asset = cal.address
+    ),
+    fill_table AS (
+      SELECT order_uuid, chain, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    ),
+    median_time_fill_table AS (
+        SELECT
+            DATE(time_order_made) AS order_date,  -- Extract the date from time_order_made
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+        FROM fill_table
+        GROUP BY order_date  -- Group by the extracted date
+        ORDER BY order_date
+    )
+    SELECT * 
+    FROM median_time_fill_table
+    """
+
+    sql_query2 = """
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            cal.chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.source_asset = cal.address
+    ),
+    fill_table AS (
+      SELECT order_uuid, chain, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    ),
+    median_source_chain_fill_table AS (
+    SELECT 
+        chain,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+    FROM fill_table
+    GROUP BY chain
+    ORDER BY median_fill_time
+    )
+    SELECT * FROM median_source_chain_fill_table
+    """
+
+    sql_query3 = """
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            cal.chain AS source_chain,
+            cal2.chain AS dest_chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.source_asset = cal.address
+        INNER JOIN coingecko_assets_list cal2
+          ON op.dest_asset = cal2.address
+    ),
+    fill_table AS (
+      SELECT order_uuid, source_chain, dest_chain, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    ),
+    median_chain_fill_table AS (
+    SELECT 
+        source_chain,
+        dest_chain,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+    FROM fill_table
+    GROUP BY source_chain, dest_chain
+    ORDER BY median_fill_time
+    )
+    SELECT * FROM median_chain_fill_table
+    """
+
+    sql_query4 = """
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            op.source_asset as source_address,
+            op.dest_asset as dest_address,
+            cal.chain AS source_chain,
+            cal2.chain AS dest_chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.source_asset = cal.address
+        INNER JOIN coingecko_assets_list cal2
+          ON op.dest_asset = cal2.address
+    ),
+    fill_table AS (
+      SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    )
+    SELECT * 
+    FROM fill_table
+    ORDER BY fill_time DESC
+    LIMIT 10
+    """
+
+    sql_query5 = """
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            op.source_asset as source_address,
+            op.dest_asset as dest_address,
+            cal.chain AS source_chain,
+            cal2.chain AS dest_chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.source_asset = cal.address
+        INNER JOIN coingecko_assets_list cal2
+          ON op.dest_asset = cal2.address
+    ),
+    fill_table AS (
+      SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    )
+    SELECT * 
+    FROM fill_table
+    ORDER BY fill_time ASC
+    LIMIT 10
+    """
+
+
+
+    def execute_sql(query):
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json"
+        }
+        # Endpoint for the RPC function
+        rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
+        
+        # Payload with the SQL query
+        payload = {"query": query}
+        
+        # Make the POST request to the RPC function
+        response = requests.post(rpc_endpoint, headers=headers, json=payload)
+        
+        # Handle response
+        if response.status_code == 200:
+            data = response.json()
+            df = pd.DataFrame(data)
+            return df
+        else:
+            print("Error executing query:", response.status_code, response.json())
+
+    # Call the function
+    df_fill_time_date = execute_sql(sql_query1)
+    df_fill_time_s_chain = execute_sql(sql_query2)
+    df_fill_time_chain = execute_sql(sql_query3)
+    df_fill_time_highest = execute_sql(sql_query4)
+    df_fill_time_lowest = execute_sql(sql_query5)
+
+    df_fill_time_date = pd.json_normalize(df_fill_time_date['result'])
+    df_fill_time_s_chain = pd.json_normalize(df_fill_time_s_chain['result'])
+    df_fill_time_chain = pd.json_normalize(df_fill_time_chain['result'])
+    df_fill_time_highest = pd.json_normalize(df_fill_time_highest['result'])
+    df_fill_time_lowest = pd.json_normalize(df_fill_time_lowest['result'])
+
+
+    # Create chain pair column for better visualization
+    df_fill_time_chain['chain_pair'] = df_fill_time_chain['source_chain'] + ' to ' + df_fill_time_chain['dest_chain']
+
+    # Sorting the median fill times in descending order for better visualization
+    df_fill_time_chain = df_fill_time_chain.sort_values(by='median_fill_time', ascending=False)
+
+#    st.set_page_config(layout="wide")
+
+    # Plotting the first chart (Chain Pair vs Median Fill Time) using Altair
+    st.title('Fill Time Visualizations')
+
+    # Create two columns to place the charts next to each other
+    col1, col2, col3 = st.columns([3, 3, 2])
+
+    # First chart (Chain Pair vs Median Fill Time)
+    with col1:
+        st.subheader('Median Fill Time by Chain Pair')
+        chart_chain = alt.Chart(df_fill_time_chain).mark_bar().encode(
+            x=alt.X('chain_pair:N', sort=None),  # Chain pair on x-axis
+            y='median_fill_time:Q',  # Median fill time on y-axis
+            color='median_fill_time:Q',  # Color by median fill time
+            tooltip=['chain_pair:N', 'median_fill_time:Q']  # Tooltip with chain pair and median fill time
+        )
+        st.altair_chart(chart_chain, use_container_width=True)
+
+    # Second chart (Fill Time by Date) as a line chart
+    with col2:
+        st.subheader('Median Fill Time by Date')
+        # Convert 'date' column to datetime for line chart
+        df_fill_time_date['order_date'] = pd.to_datetime(df_fill_time_date['order_date'])
+
+        # Display the line chart using Streamlit's st.line_chart
+        st.line_chart(df_fill_time_date.set_index('order_date')['median_fill_time'])
+        
+    # Third container (Table) displaying df_fill_time_s_chain, sorted by median_fill_time
+    with col3:
+        st.subheader('Source Chain Median Fill Time')
+        # Sort df_fill_time_s_chain by median_fill_time in descending order
+        df_fill_time_s_chain_sorted = df_fill_time_s_chain.sort_values(by='median_fill_time', ascending=False)
+
+        # Display the sorted table
+        st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
+
+    # Centering the dataframe using columns
+    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
+
+    with col2:  # This column will be centered
+        st.subheader("Orders with the Ten Lowest Fill Times")
+        st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+
+    # Centering the dataframe using columns
+    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
+
+    with col2:  # This column will be centered
+        st.subheader("Orders with the Ten Highest Fill Times")
+        st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+        
