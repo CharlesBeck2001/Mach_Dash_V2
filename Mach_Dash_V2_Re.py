@@ -430,6 +430,95 @@ INNER JOIN dest_volume_table dvt
     FROM CumulativeTrades
     ORDER BY N
     """
+
+    sql_query13 = """
+    WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.source_quantity, 
+        op.source_asset,
+        op.sender_address,  
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    ),
+    dest_volume_table AS (
+        SELECT DISTINCT
+            op.order_uuid, 
+            op.dest_quantity, 
+            op.dest_asset,
+            me.maker_address,  
+            ti.decimals AS dest_decimal,
+            cal.id AS dest_id,
+            cal.chain AS dest_chain,
+            cmd.current_price::FLOAT AS dest_price,
+            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.dest_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.dest_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+    ),
+    overall_volume_table_2 AS (
+        SELECT DISTINCT
+            svt.order_uuid,
+            svt.sender_address,  
+            dvt.maker_address,   
+            svt.source_volume,
+            dvt.dest_volume,
+            (dvt.dest_volume + svt.source_volume) AS total_volume
+        FROM source_volume_table svt
+        INNER JOIN dest_volume_table dvt
+            ON svt.order_uuid = dvt.order_uuid
+    ),
+    total_volume_table AS (
+        SELECT 
+            address,
+            COALESCE(SUM(total_volume), 0) AS total_user_volume
+        FROM (
+            SELECT sender_address AS address, total_volume
+            FROM overall_volume_table_2
+            UNION ALL
+            SELECT maker_address AS address, total_volume
+            FROM overall_volume_table_2
+        ) AS combined_addresses
+        GROUP BY address
+    ),
+    ranked_volume_table AS (
+        SELECT 
+            address,
+            total_user_volume,
+            RANK() OVER (ORDER BY total_user_volume DESC) AS rank
+        FROM total_volume_table
+    ),
+    cumulative_volume_table AS (
+        SELECT 
+            rank,
+            SUM(total_user_volume) OVER (ORDER BY rank) AS cumulative_volume,
+            (SUM(total_user_volume) OVER (ORDER BY rank) * 100.0) / (SUM(total_user_volume) OVER ()) AS percentage_of_total_volume
+        FROM ranked_volume_table
+    )
+    SELECT 
+        rank AS top_n,
+        percentage_of_total_volume
+    FROM cumulative_volume_table
+    WHERE rank <= 300;
+    """
     @st.cache_data
     def execute_sql(query):
         headers = {
