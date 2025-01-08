@@ -905,8 +905,8 @@ chain_data = data[
     data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
 ]
 
-st.write(chain_data)
-st.write(asset_data)
+st.write(top_assets)
+st.write(top_chains)
 
 # Create Sankey chart function
 def create_sankey_chart(df, source_col, target_col, value_col):
