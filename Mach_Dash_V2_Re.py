@@ -858,7 +858,7 @@ ORDER BY
 """
 
 data = execute_sql(sql_query)
-
+data = pd.json_normalize(data['result'])
 data["source"] = data["source_id"] + " (S)"
 data["destination"] = data["dest_id"] + " (D)"
 
