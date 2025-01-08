@@ -1217,30 +1217,6 @@ if 1 == 1:
         st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
 
 
-# Limit to the first 30 rows
-df_volume_rank = df_volume_rank.head(10)
-# Truncate 'percentage' to one decimal place
-df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_total_volume'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_volume_rank,
-    x='top_n',  # Top N users
-    y='percentage_of_total_volume',  # Percentage
-    text='percentage_of_total_volume',  # Show percentage values on the bars
-    labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
-    title='Percentage of Total Volume Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
 
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
