@@ -1146,21 +1146,6 @@ if 1 == 1:
         # Display the sorted table
         st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
 
-    # Centering the dataframe using columns
-    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
-
-    with col2:  # This column will be centered
-        st.subheader("Orders with the Ten Lowest Fill Times")
-        st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-
-    # Centering the dataframe using columns
-    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
-
-    with col2:  # This column will be centered
-        st.subheader("Orders with the Ten Highest Fill Times")
-        st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-        
-
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 with col1:
