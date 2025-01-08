@@ -825,8 +825,6 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Limit to the first 30 rows
 df_volume_rank = df_volume_rank.head(10)
-
-st.write(df_volume_rank)
 # Truncate 'percentage' to one decimal place
 df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_total_volume'].round(1)
 # Create the bar chart
