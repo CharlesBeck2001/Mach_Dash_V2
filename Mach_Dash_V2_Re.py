@@ -588,7 +588,7 @@ INNER JOIN dest_volume_table dvt
     df_average_trades = execute_sql(sql_query14)
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
-    st.write(df_average_trades)
+    average_trades = df_average_trades['average_trades_per_year']
     
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
@@ -654,7 +654,7 @@ INNER JOIN dest_volume_table dvt
     dfs["weekly_volume"]["week_starting"] = dfs["weekly_volume"]["week_starting"].dt.strftime('%B %d, %Y')
     
 # Define the layout
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
 # Box 1
@@ -671,6 +671,9 @@ with col3:
     st.metric(label="Total Trades", value=f"{trade_count:,}")
     total_trades = trade_count
 
+with col4:
+    st.metric(label="Average Trades Per User", value=f"{average_trades:,}")
+    
 # Additional styling for more customization (optional)
 st.markdown(
     """
