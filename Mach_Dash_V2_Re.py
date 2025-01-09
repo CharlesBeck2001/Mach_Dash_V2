@@ -535,7 +535,7 @@ INNER JOIN dest_volume_table dvt
     )
     SELECT
       CAST(AVG(trade_count) AS INT) AS average_trades_per_user
-    FROM user_trade_counts;
+    FROM user_trade_counts
     """
     
     @st.cache_data
