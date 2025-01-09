@@ -672,7 +672,7 @@ with col3:
     total_trades = trade_count
 
 with col4:
-    st.metric(label="Average Trades Per User", value=f"{average_trades:,}")
+    st.metric(label="Average Trades Per User", value=average_trades)
     
 # Additional styling for more customization (optional)
 st.markdown(
