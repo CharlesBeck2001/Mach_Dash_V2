@@ -1933,18 +1933,30 @@ def get_volume_vs_date(asset_id):
 
 
 # Streamlit UI
-st.title("Volume vs. Date for Selected Asset")
+st.title("Volume vs. Date for Multiple Assets")
 
-# Select an asset
-selected_asset = st.selectbox("Select an Asset", asset_list)
+# Multi-select assets
+selected_assets = st.multiselect("Select Assets", assets, default=assets[:1])
 
-if selected_asset:
-    # Fetch data for the selected asset
-    data = get_volume_vs_date(selected_asset)
+if selected_assets:
+    # Fetch data for the selected assets
+    data = get_volume_vs_date(selected_assets)
 
     if data.empty:
-        st.warning("No data available for the selected asset!")
+        st.warning("No data available for the selected assets!")
     else:
         # Plot the data
-        fig = px.line(data, x="day", y="total_daily_volume", title=f"Volume vs. Date for {selected_asset}", labels={"day": "Date", "total_daily_volume": "Total Volume"})
+        fig = px.line(
+            data,
+            x="day",
+            y="total_daily_volume",
+            color="asset_id",
+            title="Volume vs. Date for Selected Assets",
+            labels={
+                "day": "Date",
+                "total_daily_volume": "Total Volume",
+                "asset_id": "Asset"
+            }
+        )
+        fig.update_layout(legend_title="Assets", legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig)
