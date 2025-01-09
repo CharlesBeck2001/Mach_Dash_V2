@@ -521,6 +521,22 @@ INNER JOIN dest_volume_table dvt
     FROM cumulative_volume_table
     WHERE rank <= 300
     """
+
+    sql_query14 = """
+    WITH user_trade_counts AS (
+      SELECT
+        op.sender_address AS address,
+        COUNT(op.order_uuid) AS trade_count
+      FROM order_placed op
+      INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+      WHERE op.sender_address = me.maker_address
+      GROUP BY op.sender_address
+    )
+    SELECT
+      CAST(AVG(trade_count) AS INT) AS average_trades_per_user
+    FROM user_trade_counts;
+    """
     
     @st.cache_data
     def execute_sql(query):
@@ -568,6 +584,11 @@ INNER JOIN dest_volume_table dvt
     df_trade_rank = execute_sql(sql_query12)
 
     df_volume_rank = execute_sql(sql_query13)
+
+    df_total_trades = execute_sql(sql_query14)
+
+    df_total_trades = pd.json_normalize(df_total_trades['result'])
+    st.write(df_total_trades)
     
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
