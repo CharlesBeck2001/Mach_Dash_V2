@@ -1044,43 +1044,50 @@ INNER JOIN dest_volume_table dvt
 
 
     # User filter for source pairs    
-    st.sidebar.header("Source Volume Filters")
-    source_chains = st.sidebar.multiselect(
-        "Select Source Chains", 
-        options=df_source_chain_volume["source_chain"].unique(),
-        default=df_source_chain_volume["source_chain"].unique()
-    )
-    source_ids = st.sidebar.multiselect(
-        "Select Source IDs", 
-        options=df_source_chain_volume["source_id"].unique(),
-        default=df_source_chain_volume["source_id"].unique()
-    )
+    #st.sidebar.header("Source Volume Filters")
+    #source_chains = st.sidebar.multiselect(
+    #    "Select Source Chains", 
+    #    options=df_source_chain_volume["source_chain"].unique(),
+    #    default=df_source_chain_volume["source_chain"].unique()
+    #)
 
+    source_chains = df_source_chain_volume["source_chain"].unique()
+    #source_ids = st.sidebar.multiselect(
+    #    "Select Source IDs", 
+    #    options=df_source_chain_volume["source_id"].unique(),
+    #    default=df_source_chain_volume["source_id"].unique()
+    #)
+    source_ids = df_source_chain_volume["source_id"].unique()
     # User filter for destination pairs
-    st.sidebar.header("Destination Volume Filters")
-    dest_chains = st.sidebar.multiselect(
-        "Select Destination Chains", 
-        options=df_dest_chain_volume["dest_chain"].unique(),
-        default=df_dest_chain_volume["dest_chain"].unique()
-    )
-    dest_ids = st.sidebar.multiselect(
-        "Select Destination IDs", 
-        options=df_dest_chain_volume["dest_id"].unique(),
-        default=df_dest_chain_volume["dest_id"].unique()
-    )
-
+    
+    #st.sidebar.header("Destination Volume Filters")
+    # dest_chains = st.sidebar.multiselect(
+    #    "Select Destination Chains", 
+    #    options=df_dest_chain_volume["dest_chain"].unique(),
+    #    default=df_dest_chain_volume["dest_chain"].unique()
+    #)
+    dest_chains = df_dest_chain_volume["dest_chain"].unique()
+    
+    #dest_ids = st.sidebar.multiselect(
+    #    "Select Destination IDs", 
+    #    options=df_dest_chain_volume["dest_id"].unique(),
+    #    default=df_dest_chain_volume["dest_id"].unique()
+    #)
+    dest_ids = df_dest_chain_volume["dest_id"].unique()
     # User filter for total volume pairs
-    st.sidebar.header("Total Volume Filters")
-    total_chains = st.sidebar.multiselect(
-        "Select Chains", 
-        options=df_total_chain_volume["chain"].unique(),
-        default=df_total_chain_volume["chain"].unique()
-    )
-    total_assets = st.sidebar.multiselect(
-        "Select Assets", 
-        options=df_total_chain_volume["asset"].unique(),
-        default=df_total_chain_volume["asset"].unique()
-    )
+    #st.sidebar.header("Total Volume Filters")
+    #total_chains = st.sidebar.multiselect(
+    #    "Select Chains", 
+    #    options=df_total_chain_volume["chain"].unique(),
+    #    default=df_total_chain_volume["chain"].unique()
+    #)
+    total_chains = df_total_chain_volume["chain"].unique()
+    #total_assets = st.sidebar.multiselect(
+    #    "Select Assets", 
+    #    options=df_total_chain_volume["asset"].unique(),
+    #    default=df_total_chain_volume["asset"].unique()
+    #)
+    total_assets = df_total_chain_volume["asset"].unique()
 
     
     with st.container():
