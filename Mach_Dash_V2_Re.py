@@ -1953,6 +1953,9 @@ if selected_assets:
             # Add the 'asset' column (asset name is already included in 'data')
             all_assets_data = pd.concat([all_assets_data, data])
 
+    # Convert 'day' column to datetime type (if it's not already)
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
 
