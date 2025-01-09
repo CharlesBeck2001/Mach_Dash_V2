@@ -1951,7 +1951,7 @@ if selected_assets:
                 data,
                 x="day",
                 y="total_daily_volume",
-                color="asset",
+                color="asse_id",
                 title="Volume vs. Date for Selected Assets",
                 labels={
                     "day": "Date",
