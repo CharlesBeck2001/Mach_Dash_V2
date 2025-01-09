@@ -537,6 +537,24 @@ INNER JOIN dest_volume_table dvt
       CAST(AVG(trade_count) AS INT) AS average_trades_per_user
     FROM user_trade_counts
     """
+
+    sql_query15 = """
+    WITH user_trade_counts AS (
+        SELECT
+            op.sender_address AS address,
+            COUNT(op.order_uuid) AS trade_count
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        WHERE op.sender_address = me.maker_address
+        GROUP BY op.sender_address
+    )   
+    SELECT
+        CAST(
+            (COUNT(CASE WHEN trade_count > 1 THEN 1 END) * 100.0) / COUNT(*) AS INT
+        ) AS percent_users_with_more_than_one_trade
+    FROM user_trade_counts
+    """
     
     @st.cache_data
     def execute_sql(query):
@@ -586,6 +604,12 @@ INNER JOIN dest_volume_table dvt
     df_volume_rank = execute_sql(sql_query13)
 
     df_average_trades = execute_sql(sql_query14)
+
+    df_perc_above = execute_sql(sql_query15)
+
+    df_perc_above = pd.json_normalize(df_perc_above['result'])
+
+    perc_above = df_perc_above['percent_users_with_more_than_one_trade']
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
     average_trades = df_average_trades['average_trades_per_user']
@@ -654,7 +678,7 @@ INNER JOIN dest_volume_table dvt
     dfs["weekly_volume"]["week_starting"] = dfs["weekly_volume"]["week_starting"].dt.strftime('%B %d, %Y')
     
 # Define the layout
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
 # Box 1
@@ -673,7 +697,9 @@ with col3:
 
 with col4:
     st.metric(label="Average Trades Per User", value=average_trades)
-    
+
+with col5:
+    st.metric(label="Percent of Users With More Than 1 Trade",value=perc_above)
 # Additional styling for more customization (optional)
 st.markdown(
     """
