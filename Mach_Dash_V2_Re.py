@@ -1942,7 +1942,8 @@ if selected_assets:
     for asset in selected_assets:
         # Fetch data for the selected assets
         data = get_volume_vs_date(asset)
-
+        
+        st.write(data)
         if data.empty:
             st.warning(f"No data available for {asset}!")
         else:
@@ -1958,5 +1959,4 @@ if selected_assets:
     pivot_data = all_assets_data.pivot(index='day', columns='asset_id', values='total_daily_volume')
 
     # Plot the data using st.line_chart
-    st.write(pivot_data)
     st.line_chart(pivot_data)
