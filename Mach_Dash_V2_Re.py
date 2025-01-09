@@ -585,10 +585,10 @@ INNER JOIN dest_volume_table dvt
 
     df_volume_rank = execute_sql(sql_query13)
 
-    df_total_trades = execute_sql(sql_query14)
+    df_average_trades = execute_sql(sql_query14)
 
-    df_total_trades = pd.json_normalize(df_total_trades['result'])
-    st.write(df_total_trades)
+    df_average_trades = pd.json_normalize(df_average_trades['result'])
+    st.write(df_average_trades)
     
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
