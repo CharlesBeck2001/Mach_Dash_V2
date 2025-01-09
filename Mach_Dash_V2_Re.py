@@ -685,7 +685,6 @@ total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
 with col1:
     st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
     #st.line_chart(data["A"])
-    
 # Box 2
 with col2:
     st.metric(label="Total  Users", value=len(df_total_users))
@@ -792,6 +791,430 @@ fig.update_layout(
     height=500,
     width=800
 )
+
+if 1==1:
+    # Supabase credentials
+    supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
+    supabase_key = st.secrets["supabase_key"]
+    sql_query1 = """
+    WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+    SELECT 
+        source_chain, 
+        source_id, 
+        SUM(source_volume) AS source_volume
+    FROM 
+        overall_volume_table_2
+    GROUP BY 
+        source_chain, 
+        source_id
+    ORDER BY 
+        source_chain, 
+        source_id
+    """
+
+    sql_query2 = """
+    WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+    SELECT 
+        dest_chain, 
+        dest_id, 
+        SUM(dest_volume) AS dest_volume
+    FROM 
+        overall_volume_table_2
+    GROUP BY 
+        dest_chain, 
+        dest_id
+    ORDER BY 
+        dest_chain, 
+        dest_id
+    """
+
+    sql_query3 = """
+    WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+    SELECT 
+        chain AS chain,
+        asset AS asset,
+        SUM(volume) AS total_volume
+    FROM (
+        -- Treat source_chain/source_id as one group
+        SELECT 
+            source_chain AS chain, 
+            source_id AS asset, 
+            source_volume AS volume
+        FROM 
+            overall_volume_table_2
+
+        UNION ALL
+
+        -- Treat dest_chain/dest_id as another group
+        SELECT 
+            dest_chain AS chain, 
+            dest_id AS asset, 
+            dest_volume AS volume
+        FROM 
+            overall_volume_table_2
+    ) AS combined_data
+    GROUP BY 
+        chain, 
+        asset
+    ORDER BY 
+        chain, 
+        asset
+    """
+
+    def execute_sql(query):
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json"
+        }
+        # Endpoint for the RPC function
+        rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
+        
+        # Payload with the SQL query
+        payload = {"query": query}
+        
+        # Make the POST request to the RPC function
+        response = requests.post(rpc_endpoint, headers=headers, json=payload)
+        
+        # Handle response
+        if response.status_code == 200:
+            data = response.json()
+            
+            df = pd.DataFrame(data)
+            
+            print("Query executed successfully, returning DataFrame.")
+            return(df)
+        else:
+            print("Error executing query:", response.status_code, response.json())
+            
+    # Call the function
+    df_source_chain_volume = execute_sql(sql_query1)
+    df_dest_chain_volume = execute_sql(sql_query2)
+    df_total_chain_volume = execute_sql(sql_query3)
+
+
+    df_source_chain_volume = pd.json_normalize(df_source_chain_volume['result'])
+    df_dest_chain_volume = pd.json_normalize(df_dest_chain_volume['result'])        
+    df_total_chain_volume = pd.json_normalize(df_total_chain_volume['result'])
+
+
+    # User filter for source pairs    
+    st.sidebar.header("Source Volume Filters")
+    source_chains = st.sidebar.multiselect(
+        "Select Source Chains", 
+        options=df_source_chain_volume["source_chain"].unique(),
+        default=df_source_chain_volume["source_chain"].unique()
+    )
+    source_ids = st.sidebar.multiselect(
+        "Select Source IDs", 
+        options=df_source_chain_volume["source_id"].unique(),
+        default=df_source_chain_volume["source_id"].unique()
+    )
+
+    # User filter for destination pairs
+    st.sidebar.header("Destination Volume Filters")
+    dest_chains = st.sidebar.multiselect(
+        "Select Destination Chains", 
+        options=df_dest_chain_volume["dest_chain"].unique(),
+        default=df_dest_chain_volume["dest_chain"].unique()
+    )
+    dest_ids = st.sidebar.multiselect(
+        "Select Destination IDs", 
+        options=df_dest_chain_volume["dest_id"].unique(),
+        default=df_dest_chain_volume["dest_id"].unique()
+    )
+
+    # User filter for total volume pairs
+    st.sidebar.header("Total Volume Filters")
+    total_chains = st.sidebar.multiselect(
+        "Select Chains", 
+        options=df_total_chain_volume["chain"].unique(),
+        default=df_total_chain_volume["chain"].unique()
+    )
+    total_assets = st.sidebar.multiselect(
+        "Select Assets", 
+        options=df_total_chain_volume["asset"].unique(),
+        default=df_total_chain_volume["asset"].unique()
+    )
+
+    
+    with st.container():
+        col1, col2, col3 = st.columns([1, 1, 1])
+
+        with col1:
+            st.write("Source Volume")
+
+            # Apply filters
+            filtered_source_df = df_source_chain_volume[
+                (df_source_chain_volume["source_chain"].isin(source_chains)) & 
+                (df_source_chain_volume["source_id"].isin(source_ids))
+            ]
+
+            grouped_df = filtered_source_df.groupby(["source_chain", "source_id"], as_index=False)["source_volume"].sum()
+            chain_order = grouped_df.groupby("source_chain")["source_volume"].sum().sort_values(ascending=False).index
+
+            base = alt.Chart(grouped_df).mark_bar().encode(
+                x=alt.X("source_chain:N", title="Source Chain", sort=chain_order, axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("source_volume:Q", title="Total Volume"),
+                color=alt.Color("source_id:N", title="Source ID", scale=alt.Scale(scheme="category20")),
+                tooltip=["source_chain", "source_id", "source_volume"]
+            )
+
+            highlight = alt.selection_single(on="mouseover", fields=["source_chain", "source_id"], nearest=True, empty="none")
+            highlighted_chart = base.encode(opacity=alt.condition(highlight, alt.value(1), alt.value(0.6))).add_selection(highlight)
+
+            st.altair_chart(highlighted_chart, use_container_width=True)
+
+        with col2:
+            st.write("Destination Volume")
+
+            # Apply filters
+            filtered_dest_df = df_dest_chain_volume[
+                (df_dest_chain_volume["dest_chain"].isin(dest_chains)) & 
+                (df_dest_chain_volume["dest_id"].isin(dest_ids))
+            ]
+
+            grouped_df = filtered_dest_df.groupby(["dest_chain", "dest_id"], as_index=False)["dest_volume"].sum()
+            chain_order = grouped_df.groupby("dest_chain")["dest_volume"].sum().sort_values(ascending=False).index
+
+            base = alt.Chart(grouped_df).mark_bar().encode(
+                x=alt.X("dest_chain:N", title="Destination Chain", sort=chain_order, axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("dest_volume:Q", title="Total Volume"),
+                color=alt.Color("dest_id:N", title="Destination ID", scale=alt.Scale(scheme="category20")),
+                tooltip=["dest_chain", "dest_id", "dest_volume"]
+            )
+
+            highlight = alt.selection_single(on="mouseover", fields=["dest_chain", "dest_id"], nearest=True, empty="none")
+            highlighted_chart = base.encode(opacity=alt.condition(highlight, alt.value(1), alt.value(0.6))).add_selection(highlight)
+
+            st.altair_chart(highlighted_chart, use_container_width=True)
+
+        with col3:
+            st.write("Total Volume")
+
+            # Apply filters
+            filtered_total_df = df_total_chain_volume[
+                (df_total_chain_volume["chain"].isin(total_chains)) & 
+                (df_total_chain_volume["asset"].isin(total_assets))
+            ]
+
+            grouped_df = filtered_total_df.groupby(["chain", "asset"], as_index=False)["total_volume"].sum()
+            chain_order = grouped_df.groupby("chain")["total_volume"].sum().sort_values(ascending=False).index
+
+            base = alt.Chart(grouped_df).mark_bar().encode(
+                x=alt.X("chain:N", title="Chain", sort=chain_order, axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("total_volume:Q", title="Total Volume"),
+                color=alt.Color("asset:N", title="Asset ID", scale=alt.Scale(scheme="category20")),
+                tooltip=["chain", "asset", "total_volume"]
+            )
+
+            highlight = alt.selection_single(on="mouseover", fields=["chain", "asset"], nearest=True, empty="none")
+            highlighted_chart = base.encode(opacity=alt.condition(highlight, alt.value(1), alt.value(0.6))).add_selection(highlight)
+
+            st.altair_chart(highlighted_chart, use_container_width=True)
+        # Calculate total volume by asset
+        asset_volume = df_total_chain_volume.groupby('asset')['total_volume'].sum().reset_index()
+        asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
+
+    # Create the first pie chart for asset distribution using Altair
+    pie_asset = alt.Chart(asset_volume).mark_arc().encode(
+        theta=alt.Theta(field="total_volume", type="quantitative"),
+        color=alt.Color(field="asset", type="nominal"),
+        tooltip=['asset', 'total_volume', 'percent']
+    ).properties(
+        title="Volume by Asset"
+    )
+
+    # Streamlit layout for filtering
+    st.title("Volume Distribution Analysis")
+
+    # Assuming the filters for chains and pairs are defined earlier in the app
+    # Example: 'selected_chains' and 'selected_assets' from multiselect widgets or filtering logic
+
+    # Filter the dataframe based on the user's selection
+    filtered_total_df = df_total_chain_volume[
+        (df_total_chain_volume["chain"].isin(total_chains)) & 
+        (df_total_chain_volume["asset"].isin(total_assets))
+    ]
+
+    # Recalculate total volume by chain for the filtered data
+    chain_volume = filtered_total_df.groupby('chain')['total_volume'].sum().reset_index()
+    chain_volume['percent'] = 100 * chain_volume['total_volume'] / chain_volume['total_volume'].sum()
+
+    # Create the pie chart for chain distribution using Altair
+    pie_chain = alt.Chart(chain_volume).mark_arc().encode(
+        theta=alt.Theta(field="total_volume", type="quantitative"),
+        color=alt.Color(field="chain", type="nominal", title="Chain"),
+        tooltip=['chain', 'total_volume', 'percent']
+    ).properties(
+        title="Volume by Chain"
+    )
+
+    # Recalculate total volume by asset for the filtered data
+    asset_volume = filtered_total_df.groupby('asset')['total_volume'].sum().reset_index()
+    asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
+
+    # Create the pie chart for asset distribution using Altair
+    pie_asset = alt.Chart(asset_volume).mark_arc().encode(
+        theta=alt.Theta(field="total_volume", type="quantitative"),
+        color=alt.Color(field="asset", type="nominal", title="Asset"),
+        tooltip=['asset', 'total_volume', 'percent']
+    ).properties(
+        title="Volume by Asset"
+    )
+
+    # Display the pie charts
+    st.altair_chart(pie_asset, use_container_width=True)
+    st.altair_chart(pie_chain, use_container_width=True)
+
+
+
+
+
 st.subheader("User Portion by Trade")
 # Show chart in Streamlit
 st.plotly_chart(fig, use_container_width=True)
