@@ -893,7 +893,7 @@ with col2:
     st.line_chart(cumulative_data, use_container_width=True)
 
     
-with col2:
+with col1:
     
     st.subheader("Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
