@@ -1939,6 +1939,9 @@ st.title("Volume vs. Date for Multiple Assets")
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:3])
 
+# Initialize an empty DataFrame to collect data for all assets
+all_assets_data = pd.DataFrame()
+
 if selected_assets:
     for asset in selected_assets:
         # Fetch data for the selected assets
