@@ -1936,7 +1936,7 @@ def get_volume_vs_date(asset_id):
 st.title("Volume vs. Date for Multiple Assets")
 
 # Multi-select assets
-selected_assets = st.multiselect("Select Assets", asset_list, default=assets[:3])
+selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:3])
 
 if selected_assets:
     # Fetch data for the selected assets
