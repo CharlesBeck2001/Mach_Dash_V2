@@ -881,6 +881,7 @@ all_assets_data = pd.DataFrame()
 
 col1, col2 = st.columns(2)
 with col2:
+    st.subheader("Total Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
     all_assets_data = pd.DataFrame()
 
