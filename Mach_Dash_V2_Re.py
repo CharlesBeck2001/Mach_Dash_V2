@@ -1943,5 +1943,21 @@ if selected_assets:
     for asset in selected_assets:
         # Fetch data for the selected assets
         data = get_volume_vs_date(asset)
-        
-        st.write(data)
+
+        if data.empty:
+            st.warning(f"No data available for {asset}!")
+        else:
+            # Add the 'asset' column (asset name is already included in 'data')
+            all_assets_data = pd.concat([all_assets_data, data])
+
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
+
+    # Ensure every selected asset has a column in pivot_data
+    for asset in selected_assets:
+        if asset not in pivot_data.columns:
+            # If the column doesn't exist for the asset, create it with NaN values
+            pivot_data[asset] = pd.NA
+
+    # Plot the data using st.line_chart
+    st.line_chart(pivot_data)
