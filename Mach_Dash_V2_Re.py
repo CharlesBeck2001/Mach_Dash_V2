@@ -1373,13 +1373,14 @@ INNER JOIN dest_volume_table dvt
         asset_volume = df_total_chain_volume.groupby('asset')['total_volume'].sum().reset_index()
         asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
 
+
     # Create the first pie chart for asset distribution using Altair
     pie_asset = alt.Chart(asset_volume).mark_arc().encode(
         theta=alt.Theta(field="total_volume", type="quantitative"),
         color=alt.Color(field="asset", type="nominal"),
         tooltip=['asset', 'total_volume', 'percent']
     ).properties(
-        title="Volume by Asset"
+        title="Distribution of Total Volume on Each Asset"
     )
 
     # Streamlit layout for filtering
@@ -1397,13 +1398,14 @@ INNER JOIN dest_volume_table dvt
     chain_volume = filtered_total_df.groupby('chain')['total_volume'].sum().reset_index()
     chain_volume['percent'] = 100 * chain_volume['total_volume'] / chain_volume['total_volume'].sum()
 
+    
     # Create the pie chart for chain distribution using Altair
     pie_chain = alt.Chart(chain_volume).mark_arc().encode(
         theta=alt.Theta(field="total_volume", type="quantitative"),
         color=alt.Color(field="chain", type="nominal", title="Chain"),
         tooltip=['chain', 'total_volume', 'percent']
     ).properties(
-        title="Volume by Chain"
+        title="Distribution of Total Volume on Each Chain"
     )
 
     # Recalculate total volume by asset for the filtered data
@@ -1420,7 +1422,10 @@ INNER JOIN dest_volume_table dvt
     )
 
     # Display the pie charts
+    st.subheader("Volume by Asset")
     st.altair_chart(pie_asset, use_container_width=True)
+    
+    st.subheader("Volume by Chain")
     st.altair_chart(pie_chain, use_container_width=True)
 
 st.title("User Analysis")
