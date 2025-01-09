@@ -1944,20 +1944,18 @@ if selected_assets:
         data = get_volume_vs_date(asset)
 
         if data.empty:
-            st.warning("No data available for the selected assets!")
+            st.warning(f"No data available for {asset}!")
         else:
-            # Plot the data
-            fig = px.line(
-                data,
-                x="day",
-                y="total_daily_volume",
-                color="asse_id",
-                title="Volume vs. Date for Selected Assets",
-                labels={
-                    "day": "Date",
-                    "total_daily_volume": "Total Volume",
-                    "asset_id": "Asset"
-                }
-            )
-            fig.update_layout(legend_title="Assets", legend=dict(orientation="h", y=-0.2))
-            st.plotly_chart(fig)
+            # Add the asset's data to the combined DataFrame
+            data['asset_id'] = asset  # Add asset id as a column to differentiate lines
+            all_assets_data = pd.concat([all_assets_data, data])
+
+    # Ensure that the data is sorted by date
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+    all_assets_data = all_assets_data.sort_values(by="day")
+
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset_id', values='total_daily_volume')
+
+    # Plot the data using st.line_chart
+    st.line_chart(pivot_data)
