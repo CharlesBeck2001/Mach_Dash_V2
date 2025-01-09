@@ -714,8 +714,172 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.title("Volume Analysis")
+
+
+
+
+asset_query = """
+WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+consolidated_volumes AS (
+    SELECT
+        id,
+        SUM(volume) AS total_volume
+    FROM (
+        SELECT
+            source_id AS id,
+            SUM(source_volume) AS volume
+        FROM overall_volume_table_2
+        GROUP BY source_id
+        UNION ALL
+        SELECT
+            dest_id AS id,
+            SUM(dest_volume) AS volume
+        FROM overall_volume_table_2
+        GROUP BY dest_id
+    ) combined
+    GROUP BY id
+)
+SELECT id
+FROM consolidated_volumes
+ORDER BY total_volume DESC
+"""
+
+asset_list = execute_sql(asset_query)
+asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
+
+# Function to execute query and retrieve data
+def get_volume_vs_date(asset_id):
+    """
+    Query the Supabase database to get total volume vs date for a specific asset.
+
+    Args:
+        asset_id (str): The asset ID for which to retrieve the volume data.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing dates and their corresponding total volumes.
+    """
+    # SQL query to retrieve volume vs date for the given asset_id
+    query = f"""
+    WITH source_volume_table AS (
+        SELECT DISTINCT
+            op.*, 
+            ti.decimals AS source_decimal,
+            cal.id AS source_id,
+            cal.chain AS source_chain,
+            cmd.current_price::FLOAT AS source_price,
+            (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.source_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.source_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+    ),
+    dest_volume_table AS (
+        SELECT DISTINCT
+            op.*, 
+            ti.decimals AS dest_decimal,
+            cal.id AS dest_id,
+            cal.chain AS dest_chain,
+            cmd.current_price::FLOAT AS dest_price,
+            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.dest_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.dest_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+    ),
+    overall_volume_table_2 AS (
+        SELECT DISTINCT
+            svt.*,
+            dvt.dest_id AS dest_id,
+            dvt.dest_chain AS dest_chain,
+            dvt.dest_decimal AS dest_decimal,
+            dvt.dest_price AS dest_price,
+            dvt.dest_volume AS dest_volume,
+            (dvt.dest_volume + svt.source_volume) AS total_volume
+        FROM source_volume_table svt
+        INNER JOIN dest_volume_table dvt
+            ON svt.order_uuid = dvt.order_uuid
+    )
+    SELECT 
+        TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+        COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+        '{asset_id}' AS asset
+    FROM overall_volume_table_2 svt
+    WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
+    GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+    ORDER BY day
+    """
+    # Execute the query and return the result as a DataFrame
+    return pd.json_normalize(execute_sql(query)['result'])
+
+
+asset_list = asset_list + ['Total']
+# Multi-select assets
+selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
+
+# Initialize an empty DataFrame to collect data for all assets
+all_assets_data = pd.DataFrame()
+
+
 col1, col2 = st.columns(2)
-with col1:
+with col2:
     st.subheader("Total Volume")
     daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
         
@@ -727,16 +891,50 @@ with col1:
 
     # Display the cumulative data as a line chart
     st.line_chart(cumulative_data, use_container_width=True)
+
     
 with col2:
     
     st.subheader("Volume")
-    daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
-        
-    # Convert the daily data index to datetime without time
-    daily_data.index = pd.to_datetime(daily_data.index).date  # Keep only the date part
+    # Initialize an empty DataFrame to collect data for all assets, including "Total"
+    all_assets_data = pd.DataFrame()
 
-    st.line_chart(daily_data, use_container_width=True)
+    # Check if "Total" is in the selected assets
+    if "Total" in selected_assets:
+        total_data = dfs["daily_volume"].copy()
+
+        # Add an 'asset' column to distinguish the "Total" data
+        total_data["asset"] = "Total"
+
+        # Append to the all_assets_data DataFrame
+        all_assets_data = pd.concat([all_assets_data, total_data])
+
+    # Process individual assets
+    for asset in selected_assets:
+        if asset != "Total":
+            # Fetch data for the selected assets
+            data = get_volume_vs_date(asset)
+
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
+
+    # Ensure the 'day' column is of datetime type
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
+
+    # Ensure every selected asset has a column in pivot_data
+    for asset in selected_assets:
+        if asset not in pivot_data.columns:
+            # If the column doesn't exist for the asset, create it with NaN values
+            pivot_data[asset] = pd.NA
+    
+    # Plot the combined data using st.line_chart
+    st.line_chart(pivot_data, use_container_width=True)
     
 col1, col2 = st.columns(2)
 
@@ -1853,9 +2051,6 @@ ORDER BY total_volume DESC
 asset_list = execute_sql(asset_query)
 asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
 
-
-
-
 # Function to execute query and retrieve data
 def get_volume_vs_date(asset_id):
     """
@@ -1931,10 +2126,6 @@ def get_volume_vs_date(asset_id):
     return pd.json_normalize(execute_sql(query)['result'])
 
 
-
-
-# Streamlit UI
-st.title("Volume vs. Date for Multiple Assets")
 
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:3])
