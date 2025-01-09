@@ -768,30 +768,6 @@ def handle_page_change(page_key, direction, total_pages):
     elif direction == 'previous':
         st.session_state[page_key] -= 1
     st.rerun()
-st.title("User Analysis")
-# Limit to the first 30 rows
-df_trade_rank = df_trade_rank.head(10)
-
-# Truncate 'percentage' to one decimal place
-df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_trade_rank,
-    x='n',  # Top N users
-    y='percentage_of_total_trades',  # Percentage
-    text='percentage_of_total_trades',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
-    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
 if 1==1:
     # Supabase credentials
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
@@ -1178,7 +1154,6 @@ INNER JOIN dest_volume_table dvt
     )
 
     # Streamlit layout for filtering
-    st.title("Volume Distribution Analysis")
 
     # Assuming the filters for chains and pairs are defined earlier in the app
     # Example: 'selected_chains' and 'selected_assets' from multiselect widgets or filtering logic
@@ -1219,9 +1194,29 @@ INNER JOIN dest_volume_table dvt
     st.altair_chart(pie_asset, use_container_width=True)
     st.altair_chart(pie_chain, use_container_width=True)
 
+st.title("User Analysis")
+# Limit to the first 30 rows
+df_trade_rank = df_trade_rank.head(10)
 
+# Truncate 'percentage' to one decimal place
+df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
+# Create the bar chart
+fig = px.bar(
+    df_trade_rank,
+    x='n',  # Top N users
+    y='percentage_of_total_trades',  # Percentage
+    text='percentage_of_total_trades',  # Show percentage values on the bars
+    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
+    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
+)
 
-
+# Customize the appearance
+fig.update_traces(marker_color='blue', textposition='outside')
+fig.update_layout(
+    template='plotly_white',
+    height=500,
+    width=800
+)
 
 st.subheader("User Portion by Trade")
 # Show chart in Streamlit
