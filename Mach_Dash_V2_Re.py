@@ -880,16 +880,47 @@ all_assets_data = pd.DataFrame()
 
 col1, col2 = st.columns(2)
 with col2:
-    st.subheader("Total Volume")
-    daily_data = dfs["daily_volume"].set_index("day")["total_daily_volume"]
-        
-    # Convert the daily data index to datetime without time
-    daily_data.index = pd.to_datetime(daily_data.index).date  # Keep only the date part
+        # Initialize an empty DataFrame to collect data for all assets, including "Total"
+    all_assets_data = pd.DataFrame()
 
-    # Compute cumulative sum
-    cumulative_data = daily_data.cumsum()
+    # Check if "Total" is in the selected assets
+    if "Total" in selected_assets:
+        total_data = dfs["daily_volume"].copy()
 
-    # Display the cumulative data as a line chart
+        # Add an 'asset' column to distinguish the "Total" data
+        total_data["asset"] = "Total"
+
+        # Append to the all_assets_data DataFrame
+        all_assets_data = pd.concat([all_assets_data, total_data])
+
+    # Process individual assets
+    for asset in selected_assets:
+        if asset != "Total":
+            # Fetch data for the selected assets
+            data = get_volume_vs_date(asset)
+
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
+
+    # Ensure the 'day' column is of datetime type
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+    
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
+
+    # Ensure every selected asset has a column in pivot_data
+    for asset in selected_assets:
+        if asset not in pivot_data.columns:
+            # If the column doesn't exist for the asset, create it with NaN values
+            pivot_data[asset] = pd.NA
+
+    # Calculate cumulative sum for each asset
+    cumulative_data = pivot_data.cumsum()
+
+    # Plot the cumulative data using st.line_chart
     st.line_chart(cumulative_data, use_container_width=True)
 
     
