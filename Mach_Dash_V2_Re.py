@@ -900,11 +900,11 @@ with col2:
             # Fetch data for the selected assets
             data = get_volume_vs_date(asset)
 
-        if data.empty:
-            st.warning(f"No data available for {asset}!")
-        else:
-            # Add the 'asset' column (asset name is already included in 'data')
-            all_assets_data = pd.concat([all_assets_data, data])
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
 
     # Ensure the 'day' column is of datetime type
     all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
