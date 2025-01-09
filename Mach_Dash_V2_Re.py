@@ -1939,24 +1939,25 @@ st.title("Volume vs. Date for Multiple Assets")
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:3])
 
 if selected_assets:
-    # Fetch data for the selected assets
-    data = get_volume_vs_date(selected_assets)
+    for asset in selected_assets:
+        # Fetch data for the selected assets
+        data = get_volume_vs_date(asset)
 
-    if data.empty:
-        st.warning("No data available for the selected assets!")
-    else:
-        # Plot the data
-        fig = px.line(
-            data,
-            x="day",
-            y="total_daily_volume",
-            color="asset_id",
-            title="Volume vs. Date for Selected Assets",
-            labels={
-                "day": "Date",
-                "total_daily_volume": "Total Volume",
-                "asset_id": "Asset"
-            }
-        )
-        fig.update_layout(legend_title="Assets", legend=dict(orientation="h", y=-0.2))
-        st.plotly_chart(fig)
+        if data.empty:
+            st.warning("No data available for the selected assets!")
+        else:
+            # Plot the data
+            fig = px.line(
+                data,
+                x="day",
+                y="total_daily_volume",
+                color="asset",
+                title="Volume vs. Date for Selected Assets",
+                labels={
+                    "day": "Date",
+                    "total_daily_volume": "Total Volume",
+                    "asset_id": "Asset"
+                }
+            )
+            fig.update_layout(legend_title="Assets", legend=dict(orientation="h", y=-0.2))
+            st.plotly_chart(fig)
