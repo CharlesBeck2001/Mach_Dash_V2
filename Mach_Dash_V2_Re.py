@@ -1936,7 +1936,7 @@ def get_volume_vs_date(asset_id):
 st.title("Volume vs. Date for Selected Asset")
 
 # Select an asset
-selected_asset = st.selectbox("Select an Asset", assets)
+selected_asset = st.selectbox("Select an Asset", asset_list)
 
 if selected_asset:
     # Fetch data for the selected asset
