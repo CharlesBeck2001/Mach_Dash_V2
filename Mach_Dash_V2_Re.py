@@ -1920,7 +1920,8 @@ def get_volume_vs_date(asset_id):
     )
     SELECT 
         TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
-        COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume
+        COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+        '{asset_id}' AS asset
     FROM overall_volume_table_2 svt
     WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
     GROUP BY DATE_TRUNC('day', svt.block_timestamp)
