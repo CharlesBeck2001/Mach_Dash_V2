@@ -870,7 +870,7 @@ def get_volume_vs_date(asset_id):
     return pd.json_normalize(execute_sql(query)['result'])
 
 
-asset_list = asset_list + ['Total']
+asset_list = ['Total'] + asset_list
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
 
