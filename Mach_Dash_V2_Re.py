@@ -1405,7 +1405,7 @@ INNER JOIN dest_volume_table dvt
         color=alt.Color(field="chain", type="nominal", title="Chain"),
         tooltip=['chain', 'total_volume', 'percent']
     ).properties(
-        title="Distribution of Total Volume on Each Chain"
+        title="Distribution of Total Volume On Each Chain"
     )
 
     # Recalculate total volume by asset for the filtered data
@@ -1418,7 +1418,7 @@ INNER JOIN dest_volume_table dvt
         color=alt.Color(field="asset", type="nominal", title="Asset"),
         tooltip=['asset', 'total_volume', 'percent']
     ).properties(
-        title="Volume by Asset"
+        title="Distribution of Total Volume For Each Asset"
     )
 
     # Display the pie charts
@@ -2160,37 +2160,3 @@ def get_volume_vs_date(asset_id):
     """
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
-
-
-
-# Multi-select assets
-selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:3])
-
-# Initialize an empty DataFrame to collect data for all assets
-all_assets_data = pd.DataFrame()
-
-if selected_assets:
-    for asset in selected_assets:
-        # Fetch data for the selected assets
-        data = get_volume_vs_date(asset)
-
-        if data.empty:
-            st.warning(f"No data available for {asset}!")
-        else:
-            # Add the 'asset' column (asset name is already included in 'data')
-            all_assets_data = pd.concat([all_assets_data, data])
-
-    # Convert 'day' column to datetime type (if it's not already)
-    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
-
-    # Pivot the data to have separate columns for each asset
-    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
-
-    # Ensure every selected asset has a column in pivot_data
-    for asset in selected_assets:
-        if asset not in pivot_data.columns:
-            # If the column doesn't exist for the asset, create it with NaN values
-            pivot_data[asset] = pd.NA
-
-    # Plot the data using st.line_chart
-    st.line_chart(pivot_data)
