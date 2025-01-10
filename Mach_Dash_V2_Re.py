@@ -1508,7 +1508,7 @@ with col1:
 
     # Add index starting at 1 for display
     df_paginated_trade.index = df_paginated_trade.index + 1
-
+    df_trade_address.index = df_trade_address.index+1
     # Display the DataFrame
     st.write(df_trade_address)
 
@@ -1545,7 +1545,7 @@ with col2:
 
     # Add index starting at 1 for display
     df_paginated_volume.index = df_paginated_volume.index + 1
-
+    df_volume_address.index = df_volume_address.index+1
     # Display the DataFrame
     st.write(df_volume_address)
 
