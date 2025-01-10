@@ -1510,14 +1510,14 @@ with col1:
     df_paginated_trade.index = df_paginated_trade.index + 1
 
     # Display the DataFrame
-    st.write(df_paginated_trade)
+    st.write(df_trade_address)
 
     # Calculate total pages for trade data
-    total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
+    #total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
 
     # Use st.empty() to ensure buttons are properly placed
-    button_col_left = st.empty()
-    button_col_right = st.empty()
+    #button_col_left = st.empty()
+    #button_col_right = st.empty()
 
     # Add buttons for pagination
     if st.session_state.page_trade > 0:
@@ -1547,10 +1547,10 @@ with col2:
     df_paginated_volume.index = df_paginated_volume.index + 1
 
     # Display the DataFrame
-    st.write(df_paginated_volume)
+    st.write(df_volume_address)
 
     # Calculate total pages for volume data
-    total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
+    #total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
 
     # Add buttons for pagination
     if st.session_state.page_volume > 0:
