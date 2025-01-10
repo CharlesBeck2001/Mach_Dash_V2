@@ -1520,13 +1520,13 @@ with col1:
     #button_col_right = st.empty()
 
     # Add buttons for pagination
-    if st.session_state.page_trade > 0:
-        if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):
-            handle_page_change('page_trade', 'previous', total_pages_trade)
+    #if st.session_state.page_trade > 0:
+    #    if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):
+    #        handle_page_change('page_trade', 'previous', total_pages_trade)
 
-    if st.session_state.page_trade < total_pages_trade - 1:
-        if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):
-            handle_page_change('page_trade', 'next', total_pages_trade)
+    #if st.session_state.page_trade < total_pages_trade - 1:
+    #    if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):
+    #        handle_page_change('page_trade', 'next', total_pages_trade)
 
 # For 'Users With The Most Volume' section
 with col2:
