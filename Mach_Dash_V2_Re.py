@@ -1553,13 +1553,13 @@ with col2:
     #total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
 
     # Add buttons for pagination
-    if st.session_state.page_volume > 0:
-        if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):
-            handle_page_change('page_volume', 'previous', total_pages_volume)
+    #if st.session_state.page_volume > 0:
+     #   if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):
+      #      handle_page_change('page_volume', 'previous', total_pages_volume)
 
-    if st.session_state.page_volume < total_pages_volume - 1:
-        if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):
-            handle_page_change('page_volume', 'next', total_pages_volume)
+    #if st.session_state.page_volume < total_pages_volume - 1:
+     #   if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):
+      #      handle_page_change('page_volume', 'next', total_pages_volume)
 
 # Supabase credentials
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
