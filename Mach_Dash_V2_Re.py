@@ -13,6 +13,43 @@ import plotly.express as px
 import altair as alt
 import plotly.graph_objects as go
 
+
+def execute_sql(query):
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
+        "Content-Type": "application/json"
+    }
+    # Endpoint for the RPC function
+    rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
+        
+    # Payload with the SQL query
+    payload = {"query": query}
+        
+    # Make the POST request to the RPC function
+    response = requests.post(rpc_endpoint, headers=headers, json=payload)
+        
+    # Handle response
+    if response.status_code == 200:
+        data = response.json()
+            
+        df = pd.DataFrame(data)
+            
+        print("Query executed successfully, returning DataFrame.")
+        return(df)
+    else:
+        print("Error executing query:", response.status_code, response.json())
+
+time_query = """
+SELECT MIN(op.block_timestamp) AS oldest_time
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+"""
+
+time_point = execute_sql(time_query)
+time_point = pd.json_normalize(time_point['result'])
+
 # Time range options
 time_ranges = {
     "Last Day": 1,
@@ -32,7 +69,7 @@ today = datetime.now()
 if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
 else:
-    start_date = None  # No filter for "All Time"
+    start_date = time_point  # No filter for "All Time"
 
 st.write(start_date)
 
