@@ -78,10 +78,10 @@ today = datetime.now()
 if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
     start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
-    st.write(start_date)
+    #st.write(start_date)
 else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
-    st.write(start_date)
+    #st.write(start_date)
 # Add custom CSS to adjust width
 st.markdown(
     """
@@ -126,11 +126,12 @@ if 1 == 1:
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
     
-    sql_query1 = """  
+    sql_query1 = f"""  
     SELECT op.*
     FROM order_placed op
     INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{start_date}'
     """
 
     sql_query2 = """
@@ -645,6 +646,9 @@ INNER JOIN dest_volume_table dvt
         else:
             print("Error executing query:", response.status_code, response.json())
 
+    df_sql_timeframe = execute_sql(sql_query1)
+    df_sql_timeframe = pd.json_normalize(df_sql_timeframe['result'])
+    st.write(df_sql_timeframe)
     # Call the function
     df_hourly_volume = execute_sql(sql_query2)
     df_daily_volume = execute_sql(sql_query3)
