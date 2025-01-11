@@ -1374,9 +1374,9 @@ INNER JOIN dest_volume_table dvt
             st.altair_chart(highlighted_chart, use_container_width=True)
         # Calculate total volume by asset
         asset_volume = df_total_chain_volume.groupby('asset')['total_volume'].sum().reset_index()
-        asset_volume = asset_volume.nlargest(10, "total_volume")
         asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
 
+        asset_volume = asset_volume.nlargest(10, 'percent')
 
     # Create the first pie chart for asset distribution using Altair
     pie_asset = alt.Chart(asset_volume).mark_arc().encode(
