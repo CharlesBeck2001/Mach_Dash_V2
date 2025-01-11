@@ -1374,6 +1374,8 @@ INNER JOIN dest_volume_table dvt
             st.altair_chart(highlighted_chart, use_container_width=True)
         # Calculate total volume by asset
         asset_volume = df_total_chain_volume.groupby('asset')['total_volume'].sum().reset_index()
+        st.write(asset_volume)
+        #asset_volume = asset_volume.nlargest(10, "source_volume")
         asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
 
 
