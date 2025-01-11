@@ -80,8 +80,6 @@ st.set_page_config(
     layout="wide"                   # Optional: Adjusts layout
 )
 
-st.write(start_date)
-
 # Add custom CSS to adjust width
 st.markdown(
     """
