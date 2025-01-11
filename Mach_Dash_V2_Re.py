@@ -78,7 +78,7 @@ today = datetime.now()
 if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
 else:
-    start_date = time_point  # No filter for "All Time"
+    start_date = time_point['oldest_time'][0]  # No filter for "All Time"
 st.write(start_date)
 # Add custom CSS to adjust width
 st.markdown(
