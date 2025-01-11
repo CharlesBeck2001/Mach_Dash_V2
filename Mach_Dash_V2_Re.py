@@ -692,10 +692,13 @@ INNER JOIN dest_volume_table dvt
     df_average_trades = execute_sql(sql_query14)
 
     df_perc_above = execute_sql(sql_query15)
+    
+    if df_perc_above:
+        df_perc_above = pd.json_normalize(df_perc_above['result'])
 
-    df_perc_above = pd.json_normalize(df_perc_above['result'])
-
-    perc_above = df_perc_above['percent_users_with_more_than_one_trade']
+        perc_above = df_perc_above['percent_users_with_more_than_one_trade']
+    else:
+        perc_above = 0
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
     average_trades = df_average_trades['average_trades_per_user']
