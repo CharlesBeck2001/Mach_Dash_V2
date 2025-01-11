@@ -134,7 +134,7 @@ if 1 == 1:
     WHERE op.block_timestamp >= '{start_date}'
     """
 
-    sql_query2 = """
+    sql_query2 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -199,7 +199,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY hour_series
     """
 
-    sql_query3 = """
+    sql_query3 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -259,7 +259,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY day
     """
 
-    sql_query4 = """
+    sql_query4 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -319,7 +319,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY week_starting
     """
 
-    sql_query5 = """
+    sql_query5 = f"""
     SELECT 
         TO_CHAR(
             TO_TIMESTAMP(DATE_PART('hour', op.block_timestamp) || ':00:00', 'HH24:MI:SS'),
@@ -334,7 +334,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY DATE_PART('hour', op.block_timestamp)
     """
 
-    sql_query6 = """
+    sql_query6 = f"""
     SELECT 
         DATE(op.block_timestamp) AS trade_date,
         COUNT(*) AS total_trades
@@ -346,7 +346,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY trade_date
     """
 
-    sql_query7 = """
+    sql_query7 = f"""
     SELECT 
         DATE_TRUNC('week', op.block_timestamp) AS week_start_date,
         COUNT(*) AS total_trades
@@ -358,7 +358,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY week_start_date
     """
     
-    sql_query8 = """
+    sql_query8 = f"""
     SELECT
         DISTINCT address AS unique_address_count
     FROM (
@@ -375,7 +375,7 @@ INNER JOIN dest_volume_table dvt
     ) AS unique_addresses
     """
     
-    sql_query9 = """
+    sql_query9 = f"""
     SELECT COUNT(op.order_uuid)
         FROM order_placed op
         INNER JOIN match_executed me
@@ -383,7 +383,7 @@ INNER JOIN dest_volume_table dvt
         WHERE op.block_timestamp >= '{start_date}'
     """
     
-    sql_query10 = """
+    sql_query10 = f"""
     SELECT
         address,
         COUNT(order_id) AS trade_count
@@ -404,7 +404,7 @@ INNER JOIN dest_volume_table dvt
     LIMIT 200
     """
     
-    sql_query11 = """
+    sql_query11 = f"""
     WITH source_volume_table AS (
     SELECT DISTINCT
         op.order_uuid, 
@@ -476,7 +476,7 @@ INNER JOIN dest_volume_table dvt
     LIMIT 200
     """
 
-    sql_query12 = """ 
+    sql_query12 = f""" 
     WITH RankedTrades AS (
     SELECT
         ROW_NUMBER() OVER (ORDER BY COUNT(order_id) DESC) AS rank,
@@ -511,7 +511,7 @@ INNER JOIN dest_volume_table dvt
     ORDER BY N
     """
 
-    sql_query13 = """
+    sql_query13 = f"""
     WITH source_volume_table AS (
     SELECT DISTINCT
         op.order_uuid, 
@@ -602,7 +602,7 @@ INNER JOIN dest_volume_table dvt
     WHERE rank <= 300
     """
 
-    sql_query14 = """
+    sql_query14 = f"""
     WITH user_trade_counts AS (
       SELECT
         op.sender_address AS address,
@@ -619,7 +619,7 @@ INNER JOIN dest_volume_table dvt
     FROM user_trade_counts
     """
 
-    sql_query15 = """
+    sql_query15 = f"""
     WITH user_trade_counts AS (
         SELECT
             op.sender_address AS address,
