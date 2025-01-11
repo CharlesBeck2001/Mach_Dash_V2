@@ -701,6 +701,7 @@ INNER JOIN dest_volume_table dvt
         perc_above = 0
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
+    st.write(df_average_trades)
     if df_average_trades:
         
         average_trades = df_average_trades['average_trades_per_user']
