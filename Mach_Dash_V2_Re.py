@@ -1289,13 +1289,13 @@ INNER JOIN dest_volume_table dvt
     #    options=df_total_chain_volume["chain"].unique(),
     #    default=df_total_chain_volume["chain"].unique()
     #)
-    total_chains = df_total_chain_volume["chain"].unique()
+    total_chains = df_total_chain_volume["chain"].unique().header(10)
     #total_assets = st.sidebar.multiselect(
     #    "Select Assets", 
     #    options=df_total_chain_volume["asset"].unique(),
     #    default=df_total_chain_volume["asset"].unique()
     #)
-    total_assets = df_total_chain_volume["asset"].unique()
+    total_assets = df_total_chain_volume["asset"].unique().header(10)
 
     
     with st.container():
