@@ -63,6 +63,12 @@ time_ranges = {
 }
 
 # User selection
+st.set_page_config(
+    page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
+    page_icon=":rocket:",           # Optional: Adds an icon to the tab
+    layout="wide"                   # Optional: Adjusts layout
+)
+
 selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
 
 # Get today's date
@@ -73,12 +79,6 @@ if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
 else:
     start_date = time_point  # No filter for "All Time"
-
-st.set_page_config(
-    page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
-    page_icon=":rocket:",           # Optional: Adds an icon to the tab
-    layout="wide"                   # Optional: Adjusts layout
-)
 
 # Add custom CSS to adjust width
 st.markdown(
