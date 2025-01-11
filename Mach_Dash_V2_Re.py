@@ -693,7 +693,7 @@ INNER JOIN dest_volume_table dvt
 
     df_perc_above = execute_sql(sql_query15)
     
-    if df_perc_above:
+    if df_perc_above.empty:
         df_perc_above = pd.json_normalize(df_perc_above['result'])
 
         perc_above = df_perc_above['percent_users_with_more_than_one_trade']
