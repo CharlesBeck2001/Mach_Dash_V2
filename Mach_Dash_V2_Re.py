@@ -1310,7 +1310,7 @@ INNER JOIN dest_volume_table dvt
             ]
 
             grouped_df = filtered_source_df.groupby(["source_chain", "source_id"], as_index=False)["source_volume"].sum()
-            grouped_df = grouped_df.nlargest(10, "source_volume")
+            grouped_df = grouped_df.nlargest(16, "source_volume")
             chain_order = grouped_df.groupby("source_chain")["source_volume"].sum().sort_values(ascending=False).index
 
             base = alt.Chart(grouped_df).mark_bar().encode(
@@ -1334,7 +1334,7 @@ INNER JOIN dest_volume_table dvt
             ]
 
             grouped_df = filtered_dest_df.groupby(["dest_chain", "dest_id"], as_index=False)["dest_volume"].sum()
-            grouped_df = grouped_df.nlargest(10, "dest_volume")
+            grouped_df = grouped_df.nlargest(16, "dest_volume")
             chain_order = grouped_df.groupby("dest_chain")["dest_volume"].sum().sort_values(ascending=False).index
 
             base = alt.Chart(grouped_df).mark_bar().encode(
@@ -1358,7 +1358,7 @@ INNER JOIN dest_volume_table dvt
             ]
 
             grouped_df = filtered_total_df.groupby(["chain", "asset"], as_index=False)["total_volume"].sum()
-            grouped_df = grouped_df.nlargest(10, "total_volume")
+            grouped_df = grouped_df.nlargest(16, "total_volume")
             chain_order = grouped_df.groupby("chain")["total_volume"].sum().sort_values(ascending=False).index
 
             base = alt.Chart(grouped_df).mark_bar().encode(
