@@ -34,6 +34,8 @@ if time_ranges[selected_range] is not None:
 else:
     start_date = None  # No filter for "All Time"
 
+st.write(start_date)
+
 # Set page configuration
 st.set_page_config(
     page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
