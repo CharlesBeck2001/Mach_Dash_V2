@@ -77,6 +77,7 @@ today = datetime.now()
 # Calculate the start date
 if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
+    start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
 else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
 st.write(start_date)
