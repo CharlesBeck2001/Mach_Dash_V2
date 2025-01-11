@@ -83,6 +83,7 @@ else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 # Add custom CSS to adjust width
+st.write(start_date)
 st.markdown(
     """
     <style>
