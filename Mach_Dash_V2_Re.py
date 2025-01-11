@@ -701,12 +701,10 @@ INNER JOIN dest_volume_table dvt
         perc_above = 0
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
-    st.write(df_average_trades)
-    if df_average_trades:
-        
-        average_trades = df_average_trades['average_trades_per_user']
-    else:
+    if df_average_trades.empty:
         average_trades = 0
+    else:
+        average_trades = df_average_trades['average_trades_per_user']
     
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
