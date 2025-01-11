@@ -1414,7 +1414,7 @@ INNER JOIN dest_volume_table dvt
     asset_volume = filtered_total_df.groupby('asset')['total_volume'].sum().reset_index()
     asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
 
-    asset_volume = asset_volume.nlargest(10, 'percent')
+    asset_volume = asset_volume.nlargest(16, 'percent')
     # Create the pie chart for asset distribution using Altair
     pie_asset = alt.Chart(asset_volume).mark_arc().encode(
         theta=alt.Theta(field="total_volume", type="quantitative"),
