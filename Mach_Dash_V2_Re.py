@@ -152,6 +152,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -170,6 +171,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -215,6 +217,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -233,6 +236,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -273,6 +277,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -291,6 +296,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -323,6 +329,7 @@ INNER JOIN dest_volume_table dvt
     FROM order_placed op
     INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{start_date}'
     GROUP BY DATE_PART('hour', op.block_timestamp)
     ORDER BY DATE_PART('hour', op.block_timestamp)
     """
@@ -334,6 +341,7 @@ INNER JOIN dest_volume_table dvt
     FROM order_placed op
     INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{start_date}'
     GROUP BY DATE(op.block_timestamp)
     ORDER BY trade_date
     """
@@ -345,6 +353,7 @@ INNER JOIN dest_volume_table dvt
     FROM order_placed op
     INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{start_date}'
     GROUP BY DATE_TRUNC('week', op.block_timestamp)
     ORDER BY week_start_date
     """
@@ -362,6 +371,7 @@ INNER JOIN dest_volume_table dvt
         FROM order_placed op
         INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date}'
     ) AS unique_addresses
     """
     
@@ -370,6 +380,7 @@ INNER JOIN dest_volume_table dvt
         FROM order_placed op
         INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date}'
     """
     
     sql_query10 = """
@@ -386,6 +397,7 @@ INNER JOIN dest_volume_table dvt
         FROM order_placed op
         INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date}'
     ) AS all_trades
     GROUP BY address
     ORDER BY trade_count DESC
@@ -413,6 +425,7 @@ INNER JOIN dest_volume_table dvt
         ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date}'
     ),
     dest_volume_table AS (
     SELECT DISTINCT
@@ -434,6 +447,7 @@ INNER JOIN dest_volume_table dvt
         ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date}'
     ),
     overall_volume_table_2 AS (
     SELECT DISTINCT
@@ -478,6 +492,7 @@ INNER JOIN dest_volume_table dvt
         FROM order_placed op
         INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date}'
     ) AS all_trades
     GROUP BY address
     ),
@@ -517,6 +532,7 @@ INNER JOIN dest_volume_table dvt
         ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date}'
     ),
     dest_volume_table AS (
         SELECT DISTINCT
@@ -538,6 +554,7 @@ INNER JOIN dest_volume_table dvt
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     overall_volume_table_2 AS (
         SELECT DISTINCT
@@ -594,6 +611,7 @@ INNER JOIN dest_volume_table dvt
       INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
       WHERE op.sender_address = me.maker_address
+          AND op.block_timestamp >= '{start_date}'
       GROUP BY op.sender_address
     )
     SELECT
@@ -610,6 +628,7 @@ INNER JOIN dest_volume_table dvt
         INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
         WHERE op.sender_address = me.maker_address
+            AND op.block_timestamp >= '{start_date}'
         GROUP BY op.sender_address
     )   
     SELECT
@@ -648,7 +667,7 @@ INNER JOIN dest_volume_table dvt
 
     df_sql_timeframe = execute_sql(sql_query1)
     df_sql_timeframe = pd.json_normalize(df_sql_timeframe['result'])
-    st.write(df_sql_timeframe)
+    #st.write(df_sql_timeframe)
     # Call the function
     df_hourly_volume = execute_sql(sql_query2)
     df_daily_volume = execute_sql(sql_query3)
