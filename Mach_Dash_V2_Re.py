@@ -13,6 +13,18 @@ import plotly.express as px
 import altair as alt
 import plotly.graph_objects as go
 
+# Time range options
+time_ranges = {
+    "Last Day": 1,
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 6 Months": 180,
+    "All Time": None  # Special case for no date filter
+}
+
+# User selection
+selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
+
 # Set page configuration
 st.set_page_config(
     page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
