@@ -25,6 +25,15 @@ time_ranges = {
 # User selection
 selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
 
+# Get today's date
+today = datetime.now()
+
+# Calculate the start date
+if time_ranges[selected_range] is not None:
+    start_date = today - timedelta(days=time_ranges[selected_range])
+else:
+    start_date = None  # No filter for "All Time"
+
 # Set page configuration
 st.set_page_config(
     page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
