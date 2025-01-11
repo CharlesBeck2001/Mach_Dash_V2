@@ -127,7 +127,7 @@ if 1 == 1:
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
     
     sql_query1 = f"""  
-    SELECT op.*
+    SELECT op.order_uuid
     FROM order_placed op
     INNER JOIN match_executed me
     ON op.order_uuid = me.order_uuid
