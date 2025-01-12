@@ -1183,7 +1183,7 @@ if 1==1:
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
     
-    sql_query1 = """
+    sql_query1 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -1201,6 +1201,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1219,6 +1220,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1247,7 +1249,7 @@ INNER JOIN dest_volume_table dvt
         source_id
     """
 
-    sql_query2 = """
+    sql_query2 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -1265,6 +1267,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1283,6 +1286,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1311,7 +1315,7 @@ INNER JOIN dest_volume_table dvt
         dest_id
     """
 
-    sql_query3 = """
+    sql_query3 = f"""
     WITH source_volume_table AS(
 SELECT DISTINCT
   op.*, 
@@ -1329,6 +1333,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1347,6 +1352,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
