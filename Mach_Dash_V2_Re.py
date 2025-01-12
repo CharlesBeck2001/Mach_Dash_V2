@@ -694,7 +694,7 @@ INNER JOIN dest_volume_table dvt
 
     df_perc_above = pd.json_normalize(df_perc_above['result'])
 
-    perc_above = df_perc_above
+    st.write(df_perc_above)
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
     #st.write(df_average_trades['average_trades_per_year'])
