@@ -969,7 +969,8 @@ ORDER BY total_volume DESC
 """
 
 asset_list = execute_sql(asset_query)
-asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
+asset_list = pd.json_normalize(asset_list['result'])
+st.write(asset_list)
 
 # Function to execute query and retrieve data
 def get_volume_vs_date(asset_id):
