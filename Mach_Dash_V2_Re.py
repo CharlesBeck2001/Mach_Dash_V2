@@ -694,7 +694,7 @@ INNER JOIN dest_volume_table dvt
     df_perc_above = execute_sql(sql_query15)
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
-    st.write(df_average_trades)
+    st.write(df_average_trades[0])
 
     df_trade_address = pd.json_normalize(df_trade_address['result'])
     df_volume_address = pd.json_normalize(df_volume_address['result'])
