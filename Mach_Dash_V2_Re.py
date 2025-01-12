@@ -892,7 +892,7 @@ st.title("Volume Analysis")
 
 
 
-asset_query = """
+asset_query = f"""
 WITH source_volume_table AS (
     SELECT DISTINCT
         op.*, 
@@ -969,8 +969,7 @@ ORDER BY total_volume DESC
 """
 
 asset_list = execute_sql(asset_query)
-asset_list = pd.json_normalize(asset_list['result'])
-st.write(asset_list)
+asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
 
 # Function to execute query and retrieve data
 def get_volume_vs_date(asset_id):
