@@ -910,6 +910,7 @@ WITH source_volume_table AS (
         ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date}'
 ),
 dest_volume_table AS (
     SELECT DISTINCT
@@ -928,6 +929,7 @@ dest_volume_table AS (
         ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date}'
 ),
 overall_volume_table_2 AS (
     SELECT DISTINCT
@@ -999,6 +1001,7 @@ def get_volume_vs_date(asset_id):
             ON op.source_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     dest_volume_table AS (
         SELECT DISTINCT
@@ -1017,6 +1020,7 @@ def get_volume_vs_date(asset_id):
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     overall_volume_table_2 AS (
         SELECT DISTINCT
