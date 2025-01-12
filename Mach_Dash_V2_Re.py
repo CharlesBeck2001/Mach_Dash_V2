@@ -637,6 +637,21 @@ INNER JOIN dest_volume_table dvt
         ) AS percent_users_with_more_than_one_trade
     FROM user_trade_counts
     """
+
+    sql_query16 = f"""
+    WITH user_trade_counts AS (
+        SELECT
+            op.sender_address AS address,
+            COUNT(op.order_uuid) AS trade_count
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        WHERE op.sender_address = me.maker_address
+          AND op.block_timestamp >= '{start_date}'
+        GROUP BY op.sender_address
+    )   
+    SELECT COUNT(*) FROM user_trade_counts
+    """
     
     @st.cache_data
     def execute_sql(query):
@@ -690,11 +705,23 @@ INNER JOIN dest_volume_table dvt
 
     df_average_trades = execute_sql(sql_query14)
 
-    df_perc_above = execute_sql(sql_query15)
+    df_count_above = execute_sql(sql_query16)
 
-    df_perc_above = pd.json_normalize(df_perc_above['result'])
+    df_count_above = pd.json_normalize(df_count_above['result'])
 
-    perc_above = df_perc_above['percent_users_with_more_than_one_trade'].iloc[0]
+    count_above = df_count_above['count'].iloc[0]
+
+    if count_above == 0:
+
+        perc_above = 0
+
+    else:
+    
+        df_perc_above = execute_sql(sql_query15)
+    
+        df_perc_above = pd.json_normalize(df_perc_above['result'])
+
+        perc_above = df_perc_above['percent_users_with_more_than_one_trade'].iloc[0]
 
     df_average_trades = pd.json_normalize(df_average_trades['result'])
     #st.write(df_average_trades['average_trades_per_year'])
