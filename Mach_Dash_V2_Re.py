@@ -1972,6 +1972,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2003,6 +2004,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2036,6 +2038,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, time_order_made, fill_time
@@ -2072,6 +2075,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
@@ -2102,6 +2106,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
+        WHERE op.block_timestamp >= '{start_date}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
