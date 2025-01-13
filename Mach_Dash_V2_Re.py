@@ -1060,7 +1060,16 @@ def get_weekly_volume_vs_date(asset_id):
     # SQL query to retrieve weekly averaged volume vs date for the given asset_id
     if asset_id != 'Total':
         query = f"""
-        WITH source_volume_table AS (
+        WITH date_series AS (
+            -- Generate a series of dates from the minimum to the maximum block timestamp
+            SELECT 
+                generate_series(
+                    (SELECT MIN(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+                    (SELECT MAX(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+                    '1 day'::interval
+                )::date AS day
+        ),
+        source_volume_table AS (
             SELECT DISTINCT
                 op.*, 
                 ti.decimals AS source_decimal,
@@ -1120,6 +1129,15 @@ def get_weekly_volume_vs_date(asset_id):
                 WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
                 GROUP BY DATE_TRUNC('day', svt.block_timestamp)
         ),
+        filled_daily_volume_table AS (
+            SELECT 
+                ds.day,
+                COALESCE(dv.daily_volume, 0) AS daily_volume,
+                '{asset_id}' AS asset
+            FROM date_series ds
+            LEFT JOIN daily_volume_table dv
+            ON ds.day = dv.day
+        ),
         weekly_averaged_volume_table AS (
             SELECT 
                 day,
@@ -1128,7 +1146,7 @@ def get_weekly_volume_vs_date(asset_id):
                 AVG(daily_volume) OVER (
                     ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
                 ) AS weekly_avg_volume
-            FROM daily_volume_table
+            FROM filled_daily_volume_table
         )
         SELECT 
             TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
@@ -1139,7 +1157,16 @@ def get_weekly_volume_vs_date(asset_id):
         """
     else:
         query = f"""
-        WITH source_volume_table AS (
+        WITH date_series AS (
+            -- Generate a series of dates from the minimum to the maximum block timestamp
+            SELECT 
+                generate_series(
+                    (SELECT MIN(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+                    (SELECT MAX(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+                    '1 day'::interval
+                )::date AS day
+        ),
+        source_volume_table AS (
             SELECT DISTINCT
                 op.*, 
                 ti.decimals AS source_decimal,
@@ -1198,6 +1225,15 @@ def get_weekly_volume_vs_date(asset_id):
                 FROM overall_volume_table_2 svt
                 GROUP BY DATE_TRUNC('day', svt.block_timestamp)
         ),
+        filled_daily_volume_table AS (
+            SELECT 
+                ds.day,
+                COALESCE(dv.daily_volume, 0) AS daily_volume,
+                '{asset_id}' AS asset
+            FROM date_series ds
+            LEFT JOIN daily_volume_table dv
+            ON ds.day = dv.day
+        ),
         weekly_averaged_volume_table AS (
             SELECT 
                 day,
@@ -1206,7 +1242,7 @@ def get_weekly_volume_vs_date(asset_id):
                 AVG(daily_volume) OVER (
                     ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
                 ) AS weekly_avg_volume
-            FROM daily_volume_table
+            FROM filled_daily_volume_table
         )
         SELECT 
             TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
