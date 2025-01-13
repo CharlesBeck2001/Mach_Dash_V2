@@ -2197,7 +2197,7 @@ if 1 == 1:
         st.subheader('Source Chain Median Fill Time')
         # Sort df_fill_time_s_chain by median_fill_time in descending order
         df_fill_time_s_chain_sorted = df_fill_time_s_chain.sort_values(by='median_fill_time', ascending=False)
-        df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorte.reset_index(drop=True)
+        df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.reset_index(drop=True)
         # Display the sorted table
         st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
 
