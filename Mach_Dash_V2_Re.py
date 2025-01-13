@@ -1229,7 +1229,7 @@ all_assets_data = pd.DataFrame()
 st.write(get_weekly_volume_vs_date('Total'))
 
 if 1==1:
-    st.subheader("Total Volume Weekly Annualized")
+    st.subheader("Weekly Average Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
     all_assets_data = pd.DataFrame()
 
@@ -1251,18 +1251,14 @@ if 1==1:
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_weekly_avg_volume')
 
-    # Reindex to fill in missing dates
-    full_date_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max())
-    pivot_data = pivot_data.reindex(full_date_range)
-
-    # Fill gaps using interpolation
-    pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
-
-    # Calculate cumulative sum for each asset
-    cumulative_data = pivot_data.cumsum()
-
-    # Plot the cumulative data using st.line_chart
-    st.line_chart(cumulative_data, use_container_width=True)
+    # Ensure every selected asset has a column in pivot_data
+    for asset in selected_assets:
+        if asset not in pivot_data.columns:
+            # If the column doesn't exist for the asset, create it with NaN values
+            pivot_data[asset] = pd.NA
+    
+    # Plot the combined data using st.line_chart
+    st.line_chart(pivot_data, use_container_width=True)
 
 
 col1, col2 = st.columns(2)
