@@ -1046,6 +1046,7 @@ def get_volume_vs_date(asset_id):
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
+
 def get_weekly_volume_vs_date(asset_id):
     """
     Query the Supabase database to get weekly averaged volume vs date for a specific asset.
@@ -1248,7 +1249,7 @@ if 1==1:
     all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
 
     # Pivot the data to have separate columns for each asset
-    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_weekly_avg_volume')
 
     # Reindex to fill in missing dates
     full_date_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max())
