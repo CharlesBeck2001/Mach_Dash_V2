@@ -1959,7 +1959,7 @@ if 1 == 1:
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
     supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
     
-    sql_query1 = """
+    sql_query1 = f"""
     WITH deduplicated AS (
         SELECT 
             op.order_uuid,
@@ -1991,7 +1991,7 @@ if 1 == 1:
     FROM median_time_fill_table
     """
 
-    sql_query2 = """
+    sql_query2 = f"""
     WITH deduplicated AS (
         SELECT 
             op.order_uuid,
@@ -2022,7 +2022,7 @@ if 1 == 1:
     SELECT * FROM median_source_chain_fill_table
     """
 
-    sql_query3 = """
+    sql_query3 = f"""
     WITH deduplicated AS (
         SELECT 
             op.order_uuid,
@@ -2057,7 +2057,7 @@ if 1 == 1:
     SELECT * FROM median_chain_fill_table
     """
 
-    sql_query4 = """
+    sql_query4 = f"""
     WITH deduplicated AS (
         SELECT 
             op.order_uuid,
@@ -2088,7 +2088,7 @@ if 1 == 1:
     LIMIT 10
     """
 
-    sql_query5 = """
+    sql_query5 = f"""
     WITH deduplicated AS (
         SELECT 
             op.order_uuid,
