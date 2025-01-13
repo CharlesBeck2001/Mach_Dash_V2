@@ -1263,7 +1263,7 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 all_assets_data = pd.DataFrame()
 
 
-col1, col2, col3 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col3:
     st.subheader("Total Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
