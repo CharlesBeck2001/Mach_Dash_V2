@@ -2200,6 +2200,13 @@ if 1 == 1:
         df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.reset_index(drop=True)
         df_fill_time_s_chain_sorted.index = df_fill_time_s_chain_sorted.index+1
         # Display the sorted table
+        df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.rename(
+            columns={
+                'chain': 'Chain',
+                'median_fill_time': 'Median Fill Time'
+            }
+        )
+        
         st.dataframe(df_fill_time_s_chain_sorted[['chain', 'median_fill_time']])
 
 
