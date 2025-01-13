@@ -2539,6 +2539,7 @@ with col2:  # This column will be centered
         'time_order_made': 'Time',
         'fill_time': 'Fill Time'
     })
+    df_fill_time_lowest_reform.index = df_fill_time_lowest_reform.index + 1
     #st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
     st.dataframe(df_fill_time_lowest_reform)   
 
@@ -2558,6 +2559,7 @@ with col2:  # This column will be centered
         'fill_time': 'Fill Time'
     })
     #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+    df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
     st.dataframe(df_fill_time_highest_reform)   
 
 
