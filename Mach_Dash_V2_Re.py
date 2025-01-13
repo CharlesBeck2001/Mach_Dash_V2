@@ -56,9 +56,9 @@ time_point = pd.json_normalize(time_point['result'])
 # Time range options
 time_ranges = {
     "All Time": None,  # Special case for no date filter
-    "Last Two Days": 2,
     "Last Week": 7,
     "Last Month": 30,
+    "Last 3 Months": 90,
     "Last 6 Months": 180
 }
 
@@ -1046,6 +1046,177 @@ def get_volume_vs_date(asset_id):
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
+def get_weekly_volume_vs_date(asset_id):
+    """
+    Query the Supabase database to get weekly averaged volume vs date for a specific asset.
+
+    Args:
+        asset_id (str): The asset ID for which to retrieve the volume data.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing dates and their corresponding weekly averaged volumes.
+    """
+    # SQL query to retrieve weekly averaged volume vs date for the given asset_id
+    if asset_id:
+        query = f"""
+        WITH source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date}'
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date}'
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        ),
+        daily_volume_table AS (
+            SELECT 
+                DATE_TRUNC('day', svt.block_timestamp) AS day,
+                SUM(svt.total_volume) AS daily_volume,
+                '{asset_id}' AS asset
+                FROM overall_volume_table_2 svt
+                WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
+                GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+        ),
+        weekly_averaged_volume_table AS (
+            SELECT 
+                day,
+                asset,
+                -- Calculate the 7-day centered moving average
+                AVG(daily_volume) OVER (
+                    ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
+                ) AS weekly_avg_volume
+            FROM daily_volume_table
+        )
+        SELECT 
+            TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
+            weekly_avg_volume AS total_weekly_avg_volume,
+            asset
+        FROM weekly_averaged_volume_table
+        ORDER BY day;
+        """
+    else:
+        query = f"""
+        WITH source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date}'
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date}'
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        ),
+        daily_volume_table AS (
+            SELECT 
+                DATE_TRUNC('day', svt.block_timestamp) AS day,
+                SUM(svt.total_volume) AS daily_volume,
+                'Total' AS asset
+                FROM overall_volume_table_2 svt
+                GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+        ),
+        weekly_averaged_volume_table AS (
+            SELECT 
+                day,
+                asset,
+                -- Calculate the 7-day centered moving average
+                AVG(daily_volume) OVER (
+                    ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
+                ) AS weekly_avg_volume
+            FROM daily_volume_table
+        )
+        SELECT 
+            TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
+            weekly_avg_volume AS total_weekly_avg_volume,
+            asset
+        FROM weekly_averaged_volume_table
+        ORDER BY day;
+        """
+    # Execute the query and return the result as a DataFrame
+    return pd.json_normalize(execute_sql(query)['result'])
+
 
 asset_list = ['Total'] + asset_list
 # Multi-select assets
@@ -1054,6 +1225,43 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 # Initialize an empty DataFrame to collect data for all assets
 all_assets_data = pd.DataFrame()
 
+st.write(get_weekly_volume_vs_date())
+
+if 1==1:
+    st.subheader("Total Volume Weekly Annualized")
+    # Initialize an empty DataFrame to collect data for all assets, including "Total"
+    all_assets_data = pd.DataFrame()
+
+    # Process individual assets
+    for asset in selected_assets:
+        if asset != "Total":
+            # Fetch data for the selected assets
+            data = get_weekly_volume_vs_date(asset)
+
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
+
+    # Ensure the 'day' column is of datetime type
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_daily_volume')
+
+    # Reindex to fill in missing dates
+    full_date_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max())
+    pivot_data = pivot_data.reindex(full_date_range)
+
+    # Fill gaps using interpolation
+    pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
+
+    # Calculate cumulative sum for each asset
+    cumulative_data = pivot_data.cumsum()
+
+    # Plot the cumulative data using st.line_chart
+    st.line_chart(cumulative_data, use_container_width=True)
 
 
 col1, col2 = st.columns(2)
