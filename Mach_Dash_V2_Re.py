@@ -1585,7 +1585,7 @@ INNER JOIN dest_volume_table dvt
     chain_volume = filtered_total_df.groupby('chain')['total_volume'].sum().reset_index()
     chain_volume['percent'] = 100 * chain_volume['total_volume'] / chain_volume['total_volume'].sum()
 
-    
+    chain_volume = chain_volume.nlargest(10, 'percent')
     # Create the pie chart for chain distribution using Altair
     pie_chain = alt.Chart(chain_volume).mark_arc().encode(
         theta=alt.Theta(field="total_volume", type="quantitative"),
@@ -1599,7 +1599,7 @@ INNER JOIN dest_volume_table dvt
     asset_volume = filtered_total_df.groupby('asset')['total_volume'].sum().reset_index()
     asset_volume['percent'] = 100 * asset_volume['total_volume'] / asset_volume['total_volume'].sum()
 
-    asset_volume = asset_volume.nlargest(16, 'percent')
+    asset_volume = asset_volume.nlargest(10, 'percent')
     # Create the pie chart for asset distribution using Altair
     pie_asset = alt.Chart(asset_volume).mark_arc().encode(
         theta=alt.Theta(field="total_volume", type="quantitative"),
