@@ -1485,6 +1485,7 @@ INNER JOIN dest_volume_table dvt
 
         with col1:
             st.subheader("Source Volume")
+            st.write("Volume on Source Chains for the 16 Largest Pairs")
             # Apply filters
             filtered_source_df = df_source_chain_volume[
                 (df_source_chain_volume["source_chain"].isin(source_chains)) & 
@@ -1509,6 +1510,7 @@ INNER JOIN dest_volume_table dvt
 
         with col2:
             st.subheader("Destination Volume")
+            st.write("Volume on Destination Chains for the 16 Largest Pairs")
             # Apply filters
             filtered_dest_df = df_dest_chain_volume[
                 (df_dest_chain_volume["dest_chain"].isin(dest_chains)) & 
@@ -1533,6 +1535,7 @@ INNER JOIN dest_volume_table dvt
 
         with col3:
             st.subheader("Total Volume")
+            st.write("Total Volume on Chains for the 16 Largest Pairs")
             # Apply filters
             filtered_total_df = df_total_chain_volume[
                 (df_total_chain_volume["chain"].isin(total_chains)) & 
