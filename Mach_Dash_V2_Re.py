@@ -1697,7 +1697,7 @@ with col1:
     df_paginated_trade.index = df_paginated_trade.index + 1
     df_trade_address.index = df_trade_address.index+1
     # Display the DataFrame
-    st.write(df_trade_address)
+    st.write(renamed_df_trade)
 
     # Calculate total pages for trade data
     #total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
@@ -1734,7 +1734,7 @@ with col2:
     df_paginated_volume.index = df_paginated_volume.index + 1
     df_volume_address.index = df_volume_address.index+1
     # Display the DataFrame
-    st.write(df_volume_address)
+    st.write(renamed_df_volume)
 
     # Calculate total pages for volume data
     #total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
