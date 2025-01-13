@@ -69,8 +69,6 @@ st.set_page_config(
     layout="wide"                   # Optional: Adjusts layout
 )
 
-selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
-
 # Get today's date
 today = datetime.now()
 
@@ -83,7 +81,6 @@ else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 # Add custom CSS to adjust width
-st.write(start_date)
 st.markdown(
     """
     <style>
@@ -119,6 +116,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
 
 st.title("Mach Exchange Statistics")
 
