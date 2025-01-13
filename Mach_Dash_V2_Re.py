@@ -56,7 +56,7 @@ time_point = pd.json_normalize(time_point['result'])
 # Time range options
 time_ranges = {
     "All Time": None,  # Special case for no date filter
-    "Last Day": 1,
+    "Last Two Days": 2,
     "Last Week": 7,
     "Last Month": 30,
     "Last 6 Months": 180
