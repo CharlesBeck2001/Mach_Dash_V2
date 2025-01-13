@@ -2539,7 +2539,8 @@ with col2:  # This column will be centered
         'time_order_made': 'Time',
         'fill_time': 'Fill Time'
     })
-    st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+    #st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+    st.dataframe(df_fill_time_lowest_reform)   
 
 # Centering the dataframe using columns
 col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
@@ -2556,8 +2557,8 @@ with col2:  # This column will be centered
         'time_order_made': 'Time',
         'fill_time': 'Fill Time'
     })
-    st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-        
+    #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+    st.dataframe(df_fill_time_highest_reform)   
 
 
 asset_query = """
