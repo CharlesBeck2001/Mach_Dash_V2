@@ -108,6 +108,8 @@ st.markdown(
 # Get today's date
 today = datetime.now()
 
+selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
+
 # Calculate the start date
 if time_ranges[selected_range] is not None:
     start_date = today - timedelta(days=time_ranges[selected_range])
@@ -116,8 +118,6 @@ if time_ranges[selected_range] is not None:
 else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
-
-selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
 
 st.title("Mach Exchange Statistics")
 
