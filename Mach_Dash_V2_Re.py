@@ -1134,7 +1134,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        ORDER BY day;
+        ORDER BY day
         """
     else:
         query = f"""
@@ -1212,7 +1212,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        ORDER BY day;
+        ORDER BY day
         """
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
