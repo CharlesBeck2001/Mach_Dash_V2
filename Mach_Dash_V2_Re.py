@@ -2528,6 +2528,17 @@ col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center t
 
 with col2:  # This column will be centered
     st.subheader("Orders with the Ten Lowest Fill Times")
+
+    df_fill_time_lowest_reform = df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
+    df_fill_time_lowest_reform = df_fill_time_lowest_reform.rename(columns={
+        'order_uuid': 'Order ID',
+        'source_chain': 'Source Chain',
+        'dest_chain': 'Destination Chain',
+        'source_address': 'Source Address',
+        'dest_address': 'Destination Address',
+        'time_order_made': 'Time',
+        'fill_time': 'Fill Time'
+    })
     st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
 
 # Centering the dataframe using columns
@@ -2535,6 +2546,16 @@ col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center t
 
 with col2:  # This column will be centered
     st.subheader("Orders with the Ten Highest Fill Times")
+    df_fill_time_highest_reform = df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
+    df_fill_time_highest_reform = df_fill_time_highest_reform.rename(columns={
+        'order_uuid': 'Order ID',
+        'source_chain': 'Source Chain',
+        'dest_chain': 'Destination Chain',
+        'source_address': 'Source Address',
+        'dest_address': 'Destination Address',
+        'time_order_made': 'Time',
+        'fill_time': 'Fill Time'
+    })
     st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
         
 
