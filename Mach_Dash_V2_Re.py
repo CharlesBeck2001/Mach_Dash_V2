@@ -1259,7 +1259,7 @@ if 1==1:
 
     st.write(pivot_data)
     # Plot the combined data using st.line_chart
-    st.line_chart(pivot_data, use_container_width=True)
+    #st.line_chart(pivot_data, use_container_width=True)
 
 
 col1, col2 = st.columns(2)
@@ -1349,7 +1349,8 @@ with col1:
         if asset not in pivot_data.columns:
             # If the column doesn't exist for the asset, create it with NaN values
             pivot_data[asset] = pd.NA
-    
+
+    st.write(pivot_data)
     # Plot the combined data using st.line_chart
     st.line_chart(pivot_data, use_container_width=True)
     
