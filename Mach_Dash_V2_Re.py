@@ -1606,7 +1606,7 @@ INNER JOIN dest_volume_table dvt
         color=alt.Color(field="asset", type="nominal", title="Asset"),
         tooltip=['asset', 'total_volume', 'percent']
     ).properties(
-        title="Distribution of Total Volume For Each Asset"
+        title="Distribution of Total Volume For Each Asset For Top 10 Assets"
     )
 
     # Display the pie charts
