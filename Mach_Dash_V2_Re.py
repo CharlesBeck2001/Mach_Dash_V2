@@ -69,17 +69,6 @@ st.set_page_config(
     layout="wide"                   # Optional: Adjusts layout
 )
 
-# Get today's date
-today = datetime.now()
-
-# Calculate the start date
-if time_ranges[selected_range] is not None:
-    start_date = today - timedelta(days=time_ranges[selected_range])
-    start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
-    #st.write(start_date)
-else:
-    start_date = time_point['oldest_time'][0]  # No filter for "All Time"
-    #st.write(start_date)
 # Add custom CSS to adjust width
 st.markdown(
     """
@@ -115,6 +104,18 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# Get today's date
+today = datetime.now()
+
+# Calculate the start date
+if time_ranges[selected_range] is not None:
+    start_date = today - timedelta(days=time_ranges[selected_range])
+    start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
 
 selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
 
