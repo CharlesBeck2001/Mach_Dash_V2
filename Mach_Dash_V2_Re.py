@@ -1262,54 +1262,9 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 # Initialize an empty DataFrame to collect data for all assets
 all_assets_data = pd.DataFrame()
 
-st.write(get_weekly_volume_vs_date('Total'))
 
-if 1==1:
-    st.subheader("Weekly Average Volume")
-    # Initialize an empty DataFrame to collect data for all assets, including "Total"
-    all_assets_data = pd.DataFrame()
-
-    # Process individual assets
-    for asset in selected_assets:
-        if asset != "Total":
-            # Fetch data for the selected assets
-            data = get_weekly_volume_vs_date(asset)
-
-            if data.empty:
-                st.warning(f"No data available for {asset}!")
-            else:
-                # Add the 'asset' column (asset name is already included in 'data')
-                all_assets_data = pd.concat([all_assets_data, data])
-
-        else:
-
-            data = get_weekly_volume_vs_date('Total')
-
-            if data.empty:
-                st.warning(f"No data available for Total!")
-            else:
-                # Add the 'asset' column (asset name is already included in 'data')
-                all_assets_data = pd.concat([all_assets_data, data])
-            
-    # Ensure the 'day' column is of datetime type
-    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
-
-    # Pivot the data to have separate columns for each asset
-    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_weekly_avg_volume')
-
-    # Ensure every selected asset has a column in pivot_data
-    for asset in selected_assets:
-        if asset not in pivot_data.columns:
-            # If the column doesn't exist for the asset, create it with NaN values
-            pivot_data[asset] = pd.NA
-
-    st.write(pivot_data)
-    # Plot the combined data using st.line_chart
-    st.line_chart(pivot_data, use_container_width=True)
-
-
-col1, col2 = st.columns(2)
-with col2:
+col1, col2, col3 = st.columns(2)
+with col3:
     st.subheader("Total Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
     all_assets_data = pd.DataFrame()
@@ -1356,7 +1311,7 @@ with col2:
     st.line_chart(cumulative_data, use_container_width=True)
 
     
-with col1:
+with col2:
     
     st.subheader("Volume")
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
@@ -1395,12 +1350,51 @@ with col1:
         if asset not in pivot_data.columns:
             # If the column doesn't exist for the asset, create it with NaN values
             pivot_data[asset] = pd.NA
+    # Plot the combined data using st.line_chart
+    st.line_chart(pivot_data, use_container_width=True)
 
-    st.write(pivot_data)
+with col1:
+    st.subheader("Weekly Average Volume")
+    # Initialize an empty DataFrame to collect data for all assets, including "Total"
+    all_assets_data = pd.DataFrame()
+
+    # Process individual assets
+    for asset in selected_assets:
+        if asset != "Total":
+            # Fetch data for the selected assets
+            data = get_weekly_volume_vs_date(asset)
+
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
+
+        else:
+
+            data = get_weekly_volume_vs_date('Total')
+
+            if data.empty:
+                st.warning(f"No data available for Total!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data = pd.concat([all_assets_data, data])
+            
+    # Ensure the 'day' column is of datetime type
+    all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
+
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data.pivot(index='day', columns='asset', values='total_weekly_avg_volume')
+
+    # Ensure every selected asset has a column in pivot_data
+    for asset in selected_assets:
+        if asset not in pivot_data.columns:
+            # If the column doesn't exist for the asset, create it with NaN values
+            pivot_data[asset] = pd.NA
     # Plot the combined data using st.line_chart
     st.line_chart(pivot_data, use_container_width=True)
     
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 # Initialize session state if not already present
 if 'df_trade_address' not in st.session_state:
