@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
-supabase_key = st.secrets["supabase"]["key"]
+supabase_key = st.secrets["key"]
 
 def execute_sql(query):
     headers = {
