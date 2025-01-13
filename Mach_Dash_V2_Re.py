@@ -2214,7 +2214,6 @@ if 1 == 1:
                 'median_fill_time': 'Median Fill Time'
             }
         )
-        st.write(df_fill_time_s_chain_sorted_2.columns)
         
         st.dataframe(df_fill_time_s_chain_sorted_2)
 
