@@ -2270,6 +2270,37 @@ if 1 == 1:
     SELECT * FROM median_source_chain_fill_table
     """
 
+    sql_query6 = f"""
+    WITH deduplicated AS (
+        SELECT 
+            op.order_uuid,
+            cal.chain,
+            op.block_timestamp as time_order_made,
+            EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+            ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+        FROM order_placed op
+        INNER JOIN match_executed me
+          ON op.order_uuid = me.order_uuid
+        INNER JOIN coingecko_assets_list cal
+          ON op.dest_asset = cal.address
+        WHERE op.block_timestamp >= '{start_date}'
+    ),
+    fill_table AS (
+      SELECT order_uuid, chain, time_order_made, fill_time
+      FROM deduplicated
+      WHERE rn = 1
+    ),
+    median_dest_chain_fill_table AS (
+    SELECT 
+        chain,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+    FROM fill_table
+    GROUP BY chain
+    ORDER BY median_fill_time
+    )
+    SELECT * FROM median_dest_chain_fill_table
+    """
+
     sql_query3 = f"""
     WITH deduplicated AS (
         SELECT 
@@ -2398,9 +2429,11 @@ if 1 == 1:
     df_fill_time_chain = execute_sql(sql_query3)
     df_fill_time_highest = execute_sql(sql_query4)
     df_fill_time_lowest = execute_sql(sql_query5)
+    df_fill_time_d_chain = execute_sql(sql_query6)
 
     df_fill_time_date = pd.json_normalize(df_fill_time_date['result'])
     df_fill_time_s_chain = pd.json_normalize(df_fill_time_s_chain['result'])
+    df_fill_time_d_chain = pd.json_normalize(df_fill_time_d_chain['result'])
     df_fill_time_chain = pd.json_normalize(df_fill_time_chain['result'])
     df_fill_time_highest = pd.json_normalize(df_fill_time_highest['result'])
     df_fill_time_lowest = pd.json_normalize(df_fill_time_lowest['result'])
@@ -2418,7 +2451,7 @@ if 1 == 1:
     st.title('Fill Time Visualizations')
 
     # Create two columns to place the charts next to each other
-    col1, col2, col3 = st.columns([3, 3, 2])
+    col1, col2, col3, col4 = st.columns([4, 4, 2, 2])
 
     # First chart (Chain Pair vs Median Fill Time)
     with col1:
@@ -2464,6 +2497,31 @@ if 1 == 1:
         )
         
         st.dataframe(df_fill_time_s_chain_sorted_2)
+
+    with col4:
+        st.subheader('Destination Chain Median Fill Time')
+        # Sort df_fill_time_s_chain by median_fill_time in descending order
+        df_fill_time_d_chain_sorted = df_fill_time_d_chain.sort_values(by='median_fill_time', ascending=False)
+        df_fill_time_d_chain_sorted = df_fill_time_d_chain_sorted.reset_index(drop=True)
+        df_fill_time_d_chain_sorted.index = df_fill_time_d_chain_sorted.index+1
+        # Display the sorted table
+        #df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.rename(
+        #    columns={
+        #        'chain': 'Chain',
+        #        'median_fill_time': 'Median Fill Time'
+        #    }
+        #)
+        df_fill_time_d_chain_sorted_2 = df_fill_time_d_chain_sorted[['chain', 'median_fill_time']]
+
+        df_fill_time_d_chain_sorted_2 = df_fill_time_d_chain_sorted_2.rename(
+            columns={
+                'chain': 'Chain',
+                'median_fill_time': 'Median Fill Time'
+            }
+        )
+        
+        st.dataframe(df_fill_time_d_chain_sorted_2)
+        
 
 
 
