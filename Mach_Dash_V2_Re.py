@@ -1567,7 +1567,7 @@ INNER JOIN dest_volume_table dvt
         color=alt.Color(field="asset", type="nominal"),
         tooltip=['asset', 'total_volume', 'percent']
     ).properties(
-        title="Distribution of Total Volume on Each Asset"
+        title="Distribution of Total Volume on Each Asset For Top 10 Assets"
     )
 
     # Streamlit layout for filtering
@@ -1592,7 +1592,7 @@ INNER JOIN dest_volume_table dvt
         color=alt.Color(field="chain", type="nominal", title="Chain"),
         tooltip=['chain', 'total_volume', 'percent']
     ).properties(
-        title="Distribution of Total Volume On Each Chain"
+        title="Distribution of Total Volume On Each Chain For Top 10 Chains"
     )
 
     # Recalculate total volume by asset for the filtered data
