@@ -1057,7 +1057,7 @@ def get_weekly_volume_vs_date(asset_id):
         pd.DataFrame: A DataFrame containing dates and their corresponding weekly averaged volumes.
     """
     # SQL query to retrieve weekly averaged volume vs date for the given asset_id
-    if asset_id:
+    if asset_id != 'Total':
         query = f"""
         WITH source_volume_table AS (
             SELECT DISTINCT
@@ -1225,7 +1225,7 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 # Initialize an empty DataFrame to collect data for all assets
 all_assets_data = pd.DataFrame()
 
-st.write(get_weekly_volume_vs_date())
+st.write(get_weekly_volume_vs_date('Total'))
 
 if 1==1:
     st.subheader("Total Volume Weekly Annualized")
