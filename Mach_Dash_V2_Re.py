@@ -1002,67 +1002,131 @@ def get_volume_vs_date(asset_id):
         pd.DataFrame: A DataFrame containing dates and their corresponding total volumes.
     """
     # SQL query to retrieve volume vs date for the given asset_id
-    query = f"""
-    WITH source_volume_table AS (
-        SELECT DISTINCT
-            op.*, 
-            ti.decimals AS source_decimal,
-            cal.id AS source_id,
-            cal.chain AS source_chain,
-            cmd.current_price::FLOAT AS source_price,
-            (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
-        FROM order_placed op
-        INNER JOIN match_executed me
-            ON op.order_uuid = me.order_uuid
-        INNER JOIN token_info ti
-            ON op.source_asset = ti.address
-        INNER JOIN coingecko_assets_list cal
-            ON op.source_asset = cal.address
-        INNER JOIN coingecko_market_data cmd 
-            ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date_2}'
-    ),
-    dest_volume_table AS (
-        SELECT DISTINCT
-            op.*, 
-            ti.decimals AS dest_decimal,
-            cal.id AS dest_id,
-            cal.chain AS dest_chain,
-            cmd.current_price::FLOAT AS dest_price,
-            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
-        FROM order_placed op
-        INNER JOIN match_executed me
-            ON op.order_uuid = me.order_uuid
-        INNER JOIN token_info ti
-            ON op.dest_asset = ti.address
-        INNER JOIN coingecko_assets_list cal
-            ON op.dest_asset = cal.address
-        INNER JOIN coingecko_market_data cmd 
-            ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date_2}'
-    ),
-    overall_volume_table_2 AS (
-        SELECT DISTINCT
-            svt.*,
-            dvt.dest_id AS dest_id,
-            dvt.dest_chain AS dest_chain,
-            dvt.dest_decimal AS dest_decimal,
-            dvt.dest_price AS dest_price,
-            dvt.dest_volume AS dest_volume,
-            (dvt.dest_volume + svt.source_volume) AS total_volume
-        FROM source_volume_table svt
-        INNER JOIN dest_volume_table dvt
-            ON svt.order_uuid = dvt.order_uuid
-    )
-    SELECT 
-        TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
-        COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
-        '{asset_id}' AS asset
-    FROM overall_volume_table_2 svt
-    WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
-    GROUP BY DATE_TRUNC('day', svt.block_timestamp)
-    ORDER BY day
-    """
+    if asset_id != 'Total':
+        query = f"""
+        WITH source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date_2}'
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date_2}'
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+            COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
+        GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+        ORDER BY day
+        """
+    else:
+
+        query = f"""
+        WITH source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date_2}'
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= '{start_date_2}'
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+            COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+        ORDER BY day
+        """
+        
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
@@ -1291,19 +1355,8 @@ with col2:
     # Initialize an empty DataFrame to collect data for all assets, including "Total"
     all_assets_data = pd.DataFrame()
 
-    # Check if "Total" is in the selected assets
-    if "Total" in selected_assets:
-        total_data = dfs["daily_volume"].copy()
-
-        # Add an 'asset' column to distinguish the "Total" data
-        total_data["asset"] = "Total"
-
-        # Append to the all_assets_data DataFrame
-        all_assets_data = pd.concat([all_assets_data, total_data])
-
     # Process individual assets
     for asset in selected_assets:
-        if asset != "Total":
             # Fetch data for the selected assets
             data = get_volume_vs_date(asset)
 
