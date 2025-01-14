@@ -1960,7 +1960,7 @@ INNER JOIN dest_volume_table dvt
     st.subheader("Volume by Chain")
     st.altair_chart(pie_chain, use_container_width=True)
 
-
+st.title("User Analysis")
 time_ranges_4 = {
     "All Time": None,  # Special case for no date filter
     "Last Week": 7,
@@ -2117,7 +2117,6 @@ df_volume_rank = execute_sql(sql_query13)
 df_trade_rank = pd.json_normalize(df_trade_rank['result'])
 df_volume_rank = pd.json_normalize(df_volume_rank['result'])
 
-st.title("User Analysis")
 # Limit to the first 30 rows
 df_trade_rank = df_trade_rank.head(10)
 
