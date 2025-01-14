@@ -2273,6 +2273,9 @@ volume_add_query = f"""
 
 df_trade_address = execute_sql(trade_add_query)
 df_volume_address = execute_sql(volume_add_query)
+
+df_trade_address = pd.json_normalize(df_trade_address['result'])
+df_volume_address = pd.json_normalize(df_volume_address['result'])
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 with col1:
