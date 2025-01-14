@@ -1960,6 +1960,163 @@ INNER JOIN dest_volume_table dvt
     st.subheader("Volume by Chain")
     st.altair_chart(pie_chain, use_container_width=True)
 
+
+time_ranges_4 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
+# Get today's date
+today = datetime.now()
+
+selected_range_4 = st.selectbox("Select a time range for the user distribution histograms:", list(time_ranges_4.keys()))
+
+# Calculate the start date
+if time_ranges[selected_range_4] is not None:
+    start_date_4 = today - timedelta(days=time_ranges_4[selected_range_4])
+    start_date_4 = start_date_4.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_4 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
+
+if 1==1:
+
+    sql_query12 = f""" 
+    WITH RankedTrades AS (
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY COUNT(order_id) DESC) AS rank,
+        address,
+        COUNT(order_id) AS trade_count
+    FROM (
+        SELECT sender_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        UNION ALL
+        SELECT maker_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date_4}'
+    ) AS all_trades
+    GROUP BY address
+    ),
+    CumulativeTrades AS (
+    SELECT
+        rank AS N,
+        SUM(trade_count) OVER (ORDER BY rank) AS cumulative_trade_count,
+        (SELECT SUM(trade_count) FROM RankedTrades) AS total_trades
+    FROM RankedTrades
+    WHERE rank <= 200
+    )
+    SELECT
+        N,
+        CAST(cumulative_trade_count * 100.0 / total_trades AS FLOAT) AS percentage_of_total_trades
+    FROM CumulativeTrades
+    ORDER BY N
+    """
+
+    sql_query13 = f"""
+    WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.source_quantity, 
+        op.source_asset,
+        op.sender_address,  
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date_4}'
+    ),
+    dest_volume_table AS (
+        SELECT DISTINCT
+            op.order_uuid, 
+            op.dest_quantity, 
+            op.dest_asset,
+            me.maker_address,  
+            ti.decimals AS dest_decimal,
+            cal.id AS dest_id,
+            cal.chain AS dest_chain,
+            cmd.current_price::FLOAT AS dest_price,
+            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.dest_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.dest_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{start_date_4}'
+    ),
+    overall_volume_table_2 AS (
+        SELECT DISTINCT
+            svt.order_uuid,
+            svt.sender_address,  
+            dvt.maker_address,   
+            svt.source_volume,
+            dvt.dest_volume,
+            (dvt.dest_volume + svt.source_volume) AS total_volume
+        FROM source_volume_table svt
+        INNER JOIN dest_volume_table dvt
+            ON svt.order_uuid = dvt.order_uuid
+    ),
+    total_volume_table AS (
+        SELECT 
+            address,
+            COALESCE(SUM(total_volume), 0) AS total_user_volume
+        FROM (
+            SELECT sender_address AS address, total_volume
+            FROM overall_volume_table_2
+            UNION ALL
+            SELECT maker_address AS address, total_volume
+            FROM overall_volume_table_2
+        ) AS combined_addresses
+        GROUP BY address
+    ),
+    ranked_volume_table AS (
+        SELECT 
+            address,
+            total_user_volume,
+            RANK() OVER (ORDER BY total_user_volume DESC) AS rank
+        FROM total_volume_table
+    ),
+    cumulative_volume_table AS (
+        SELECT 
+            rank,
+            SUM(total_user_volume) OVER (ORDER BY rank) AS cumulative_volume,
+            (SUM(total_user_volume) OVER (ORDER BY rank) * 100.0) / (SUM(total_user_volume) OVER ()) AS percentage_of_total_volume
+        FROM ranked_volume_table
+    )
+    SELECT 
+        rank AS top_n,
+        percentage_of_total_volume
+    FROM cumulative_volume_table
+    WHERE rank <= 300
+    """
+
+df_trade_rank = execute_sql(sql_query12)
+df_volume_rank = execute_sql(sql_query13)
+
+df_trade_rank = pd.json_normalize(df_trade_rank['result'])
+df_volume_rank = pd.json_normalize(df_volume_rank['result'])
+
 st.title("User Analysis")
 # Limit to the first 30 rows
 df_trade_rank = df_trade_rank.head(10)
