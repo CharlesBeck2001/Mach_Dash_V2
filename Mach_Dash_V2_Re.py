@@ -2497,6 +2497,9 @@ time_ranges_6 = {
 # Get today's date
 today = datetime.now()
 
+# Plotting the first chart (Chain Pair vs Median Fill Time) using Altair
+st.title('Fill Time Visualizations')
+
 selected_range_6 = st.selectbox("Select a time range for the fill time visualization:", list(time_ranges_6.keys()))
 
 # Calculate the start date
@@ -2753,9 +2756,6 @@ if 1 == 1:
     df_fill_time_chain = df_fill_time_chain.sort_values(by='median_fill_time', ascending=False)
 
 #    st.set_page_config(layout="wide")
-
-    # Plotting the first chart (Chain Pair vs Median Fill Time) using Altair
-    st.title('Fill Time Visualizations')
 
     # Create two columns to place the charts next to each other
     col1, col2, col3, col4 = st.columns([4, 4, 2, 2])
