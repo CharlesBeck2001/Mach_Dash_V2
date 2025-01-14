@@ -2497,7 +2497,7 @@ time_ranges_6 = {
 # Get today's date
 today = datetime.now()
 
-selected_range_6 = st.selectbox("Select a time range for the flow charts:", list(time_ranges_6.keys()))
+selected_range_6 = st.selectbox("Select a time range for the fill time visualization:", list(time_ranges_6.keys()))
 
 # Calculate the start date
 if time_ranges_6[selected_range_6] is not None:
