@@ -107,7 +107,7 @@ st.markdown(
 
 # Get today's date
 today = datetime.now()
-
+st.title("Mach Exchange Statistics")
 selected_range = st.selectbox("Select a time range for statistics on Mach:", list(time_ranges.keys()))
 
 # Calculate the start date
@@ -119,7 +119,6 @@ else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
-st.title("Mach Exchange Statistics")
 
 if 1 == 1:
  # Supabase credentials
