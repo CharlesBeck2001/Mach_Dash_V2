@@ -1173,6 +1173,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
+        WHERE day >= '{start_date_2}'
         ORDER BY day
         """
     else:
@@ -1269,6 +1270,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
+        WHERE day >= '{start_date_2}'
         ORDER BY day
         """
     # Execute the query and return the result as a DataFrame
