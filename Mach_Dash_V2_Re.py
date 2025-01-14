@@ -891,7 +891,15 @@ st.title("Volume Analysis")
 # Get today's date
 today = datetime.now()
 
-selected_range_2 = st.selectbox("Select a time range:", list(time_ranges.keys()))
+time_ranges_2 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
+selected_range_2 = st.selectbox("Select a time range:", list(time_ranges_2.keys()))
 
 # Calculate the start date
 if time_ranges[selected_range_2] is not None:
@@ -1408,10 +1416,18 @@ with col1:
 
 col1, col2 = st.columns(2)
 
+time_ranges_3 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
 # Get today's date
 today = datetime.now()
 
-selected_range_3 = st.selectbox("Select a time range:", list(time_ranges.keys()))
+selected_range_3 = st.selectbox("Select a time range:", list(time_ranges_3.keys()))
 
 # Calculate the start date
 if time_ranges[selected_range_3] is not None:
