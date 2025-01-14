@@ -2177,6 +2177,102 @@ st.session_state.df_volume_address['percentage_of_total_volume'] = (
     st.session_state.df_volume_address['total_user_volume'] / (2*total_volume) * 100
 ).round(2)
 
+
+trade_add_query = f"""
+    SELECT
+        address,
+        COUNT(order_id) AS trade_count
+    FROM (
+        SELECT sender_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        UNION ALL
+        SELECT maker_address AS address, op.order_uuid AS order_id
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        WHERE op.block_timestamp >= '{start_date_4}'
+    ) AS all_trades
+    GROUP BY address
+    ORDER BY trade_count DESC
+    LIMIT 200
+    """
+    
+volume_add_query = f"""
+    WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.source_quantity, 
+        op.source_asset,
+        op.sender_address,  -- Explicitly include sender_address
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date_4}'
+    ),
+    dest_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.dest_quantity, 
+        op.dest_asset,
+        me.maker_address,  -- Explicitly include maker_address
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{start_date_4}'
+    ),
+    overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.order_uuid,
+        svt.sender_address,  -- Explicitly use sender_address here
+        dvt.maker_address,   -- Explicitly use maker_address here
+        svt.source_volume,
+        dvt.dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+    )
+    SELECT 
+        address,
+        COALESCE(SUM(total_volume), 0) AS total_user_volume
+    FROM (
+        SELECT sender_address AS address, total_volume
+        FROM overall_volume_table_2
+        UNION ALL
+        SELECT maker_address AS address, total_volume
+        FROM overall_volume_table_2
+    ) AS combined_addresses
+    GROUP BY address
+    ORDER BY total_user_volume DESC
+    LIMIT 200
+    """
+
+df_trade_address = execute_sql(trade_add_query)
+df_volume_address = execute_sql(volume_add_query)
 # For 'Users With The Most Trades' section
 col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
 with col1:
