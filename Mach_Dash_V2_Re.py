@@ -909,7 +909,7 @@ if time_ranges[selected_range_2] is not None:
 else:
     start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
-
+st.write(start_date_2)
 
 asset_query = f"""
 WITH source_volume_table AS (
