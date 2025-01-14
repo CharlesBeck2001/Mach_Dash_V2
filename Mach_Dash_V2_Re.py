@@ -2282,7 +2282,7 @@ with col1:
     st.subheader("Users With The Most Trades")
 
     # Rename columns for clarity
-    renamed_df_trade = st.session_state.df_trade_address.rename(columns={
+    renamed_df_trade = df_trade_address.rename(columns={
         'address': 'User ID',
         'trade_count': 'Number of Trades',
         'percentage_of_total_trades': '% of Total Trades',
@@ -2319,7 +2319,7 @@ with col2:
     st.subheader("Users With The Most Volume")
 
     # Rename columns for clarity
-    renamed_df_volume = st.session_state.df_volume_address.rename(columns={
+    renamed_df_volume = df_volume_address.rename(columns={
         'address': 'User ID',
         'total_user_volume': 'Volume',
         'percentage_of_total_volume': '% of Total Volume',
