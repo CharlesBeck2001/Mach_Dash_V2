@@ -2486,6 +2486,28 @@ chain_chart = create_sankey_chart(
 )
 st.plotly_chart(chain_chart)
 
+time_ranges_6 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
+# Get today's date
+today = datetime.now()
+
+selected_range_6 = st.selectbox("Select a time range for the flow charts:", list(time_ranges_6.keys()))
+
+# Calculate the start date
+if time_ranges_6[selected_range_6] is not None:
+    start_date_6 = today - timedelta(days=time_ranges_6[selected_range_6])
+    start_date_6 = start_date_6.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_6 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
+
 if 1 == 1:
 
     # Supabase credentials
@@ -2505,7 +2527,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2537,7 +2559,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2568,7 +2590,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.dest_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2602,7 +2624,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, time_order_made, fill_time
@@ -2639,7 +2661,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
@@ -2670,7 +2692,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_6}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
