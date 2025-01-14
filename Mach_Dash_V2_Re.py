@@ -904,7 +904,7 @@ selected_range_2 = st.selectbox("Select a time range for the volume display:", l
 # Calculate the start date
 if time_ranges[selected_range_2] is not None:
     start_date_2 = today - timedelta(days=time_ranges[selected_range_2])
-    start_date_2 = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    start_date_2 = start_date_2.strftime('%Y-%m-%dT%H:%M:%S')
     #st.write(start_date)
 else:
     start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
