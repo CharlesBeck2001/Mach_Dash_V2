@@ -888,7 +888,19 @@ st.markdown(
 )
 st.title("Volume Analysis")
 
+# Get today's date
+today = datetime.now()
 
+selected_range_2 = st.selectbox("Select a time range:", list(time_ranges.keys()))
+
+# Calculate the start date
+if time_ranges[selected_range_2] is not None:
+    start_date_2 = today - timedelta(days=time_ranges[selected_range_2])
+    start_date_2 = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
 
 
 asset_query = f"""
@@ -909,7 +921,7 @@ WITH source_volume_table AS (
         ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{start_date_2}'
 ),
 dest_volume_table AS (
     SELECT DISTINCT
@@ -928,7 +940,7 @@ dest_volume_table AS (
         ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{start_date_2}'
 ),
 overall_volume_table_2 AS (
     SELECT DISTINCT
@@ -1000,7 +1012,7 @@ def get_volume_vs_date(asset_id):
             ON op.source_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_2}'
     ),
     dest_volume_table AS (
         SELECT DISTINCT
@@ -1019,7 +1031,7 @@ def get_volume_vs_date(asset_id):
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{start_date_2}'
     ),
     overall_volume_table_2 AS (
         SELECT DISTINCT
@@ -1086,7 +1098,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{start_date_2}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1105,7 +1117,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{start_date_2}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1183,7 +1195,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{start_date_2}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1202,7 +1214,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{start_date_2}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1393,8 +1405,23 @@ with col1:
             pivot_data[asset] = pd.NA
     # Plot the combined data using st.line_chart
     st.line_chart(pivot_data, use_container_width=True)
-    
+
 col1, col2 = st.columns(2)
+
+# Get today's date
+today = datetime.now()
+
+selected_range_3 = st.selectbox("Select a time range:", list(time_ranges.keys()))
+
+# Calculate the start date
+if time_ranges[selected_range_3] is not None:
+    start_date_3 = today - timedelta(days=time_ranges_3[selected_range])
+    start_date_3 = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_3 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
+
 
 # Initialize session state if not already present
 if 'df_trade_address' not in st.session_state:
@@ -1446,7 +1473,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1465,7 +1492,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1512,7 +1539,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1531,7 +1558,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1578,7 +1605,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1597,7 +1624,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date}'
+WHERE op.block_timestamp >= '{start_date_3}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
