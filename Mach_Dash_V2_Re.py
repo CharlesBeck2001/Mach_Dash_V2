@@ -2249,6 +2249,7 @@ with col2:
      #   if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):
       #      handle_page_change('page_volume', 'next', total_pages_volume)
 
+
 # Supabase credentials
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
 supabase_key = st.secrets["supabase_key"]
@@ -2270,6 +2271,40 @@ def execute_sql(query):
         print("Error executing query:", response.status_code, response.json())
         return pd.DataFrame()
 
+# Generate and display charts
+st.title("Flow Charts")
+
+time_ranges_5 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
+# Get today's date
+today = datetime.now()
+
+selected_range_5 = st.selectbox("Select a time range for the flow charts:", list(time_ranges_5.keys()))
+
+# Calculate the start date
+if time_ranges[selected_range_5] is not None:
+    start_date_5 = today - timedelta(days=time_ranges_5[selected_range_5])
+    start_date_5 = start_date_5.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_5 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
+
+
+# Initialize session state if not already present
+if 'df_trade_address' not in st.session_state:
+    st.session_state.df_trade_address = df_trade_address
+    st.session_state.df_volume_address = df_volume_address
+    st.session_state.page_trade = 0
+    st.session_state.page_volume = 0
+
+
 sql_query = f"""
 WITH source_volume_table AS(
   SELECT DISTINCT
@@ -2288,7 +2323,7 @@ WITH source_volume_table AS(
     ON op.source_asset = cal.address
   INNER JOIN coingecko_market_data cmd 
     ON cal.id = cmd.id
-  WHERE op.block_timestamp >= '{start_date}'
+  WHERE op.block_timestamp >= '{start_date_5}'
 ),
 dest_volume_table AS(
   SELECT DISTINCT
@@ -2307,7 +2342,7 @@ dest_volume_table AS(
     ON op.dest_asset = cal.address
   INNER JOIN coingecko_market_data cmd 
     ON cal.id = cmd.id
-  WHERE op.block_timestamp >= '{start_date}'
+  WHERE op.block_timestamp >= '{start_date_5}'
 ),
 overall_volume_table_2 AS(
   SELECT DISTINCT
@@ -2438,9 +2473,6 @@ def create_sankey_chart(df, source_col, target_col, value_col):
         )
     )])
     return fig
-
-# Generate and display charts
-st.title("Flow Charts")
 
 st.subheader("Asset Flow Chart")
 asset_chart = create_sankey_chart(
