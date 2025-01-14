@@ -1485,7 +1485,7 @@ selected_range_3 = st.selectbox("Select a time range for the volume distribution
 
 # Calculate the start date
 if time_ranges[selected_range_3] is not None:
-    start_date_3 = today - timedelta(days=time_ranges_3[selected_range])
+    start_date_3 = today - timedelta(days=time_ranges_3[selected_range_3])
     start_date_3 = start_date.strftime('%Y-%m-%dT%H:%M:%S')
     #st.write(start_date)
 else:
