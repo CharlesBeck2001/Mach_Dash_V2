@@ -108,7 +108,7 @@ st.markdown(
 # Get today's date
 today = datetime.now()
 
-selected_range = st.selectbox("Select a time range:", list(time_ranges.keys()))
+selected_range = st.selectbox("Select a time range for statistics on Mach:", list(time_ranges.keys()))
 
 # Calculate the start date
 if time_ranges[selected_range] is not None:
@@ -899,7 +899,7 @@ time_ranges_2 = {
     "Last 6 Months": 180
 }
 
-selected_range_2 = st.selectbox("Select a time range:", list(time_ranges_2.keys()))
+selected_range_2 = st.selectbox("Select a time range for the volume display:", list(time_ranges_2.keys()))
 
 # Calculate the start date
 if time_ranges[selected_range_2] is not None:
