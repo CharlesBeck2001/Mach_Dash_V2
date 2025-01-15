@@ -170,7 +170,6 @@ def execute_sql(query):
 
 #if start_date != st.session_state['start_date']:
 if 1==1:
-    st.session_state['start_date'] = start_date
 
     @st.cache_data
     def stats_box_maker(sd):
