@@ -2303,10 +2303,10 @@ with col1:
     })
 
     # Get the paginated DataFrame
-    df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
+    #df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
 
     # Add index starting at 1 for display
-    df_paginated_trade.index = df_paginated_trade.index + 1
+    #df_paginated_trade.index = df_paginated_trade.index + 1
     df_trade_address.index = df_trade_address.index+1
     # Display the DataFrame
     st.write(renamed_df_trade)
@@ -2340,10 +2340,10 @@ with col2:
     })
 
     # Get the paginated DataFrame
-    df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
+    #df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
 
     # Add index starting at 1 for display
-    df_paginated_volume.index = df_paginated_volume.index + 1
+    #df_paginated_volume.index = df_paginated_volume.index + 1
     df_volume_address.index = df_volume_address.index+1
     # Display the DataFrame
     st.write(renamed_df_volume)
