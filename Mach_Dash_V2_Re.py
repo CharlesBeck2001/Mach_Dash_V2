@@ -112,6 +112,27 @@ today = datetime.now()
 if "selected_range" not in st.session_state:
     st.session_state["selected_range"] = "All Time"  # Default value
 
+# Initialize session_state for start_date if not already set
+if "start_date" not in st.session_state:
+    today = datetime.now()
+    if time_ranges[st.session_state["selected_range"]] is not None:
+        start_date = today - timedelta(days=time_ranges[st.session_state["selected_range"]])
+        st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    else:
+        # If "All Time", set it to a specific point (replace with your own logic)
+        st.session_state["start_date"] = time_point['oldest_time'][0]
+
+# Function to update start_date in session_state
+def update_start_date(selected_range):
+    today = datetime.now()
+    if time_ranges[selected_range] is not None:
+        start_date = today - timedelta(days=time_ranges[selected_range])
+        st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+    else:
+        # If "All Time", set it to a specific point (replace with your own logic)
+        st.session_state["start_date"] = "1900-01-01T00:00:00"
+    st.session_state["selected_range"] = selected_range
+
 # Create the selectbox and update session state only when a change occurs
 selected_range = st.selectbox(
     "Select a time range:",
@@ -119,21 +140,6 @@ selected_range = st.selectbox(
     index=list(time_ranges.keys()).index(st.session_state["selected_range"]),
     on_change=lambda: st.session_state.update({"selected_range": selected_range}),
 )
-
-# Display content based on the selected time range
-st.write(f"Data corresponding to time range: {st.session_state['selected_range']}")
-
-# Add static elements that won't change
-st.write("This content remains unaffected by the time range selection.")
-
-
-# Calculate the start date
-if time_ranges[selected_range] is not None:
-    start_date = today - timedelta(days=time_ranges[selected_range])
-    start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S')
-    #st.write(start_date)
-else:
-    start_date = time_point['oldest_time'][0]  # No filter for "All Time
 
 @st.cache_data
 def execute_sql(query):
@@ -910,7 +916,7 @@ if 1==1:
             unsafe_allow_html=True,
         )
 
-    stats_box_maker(start_date)
+    stats_box_maker(st.session_state["start_date"])
 
 st.title("Volume Analysis")
 
