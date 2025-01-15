@@ -124,6 +124,9 @@ if "start_date" not in st.session_state:
 
 # Function to update start_date in session_state when selection changes
 def update_start_date():
+    # Update the selected_range value in session_state based on the selectbox
+    st.session_state["selected_range"] = st.session_state.get("selected_range", "All Time")
+    
     selected_range = st.session_state["selected_range"]
     today = datetime.now()
     if time_ranges[selected_range] is not None:
