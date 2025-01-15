@@ -108,13 +108,16 @@ st.title("Mach Exchange Statistics")
 # Get today's date
 today = datetime.now()
 
+if "today" not in st.session_state:
+    st.session_state["today"] = datetime.now()
+
 # Use session state to track the selected range
 if "selected_range" not in st.session_state:
     st.session_state["selected_range"] = "All Time"  # Default value
 
 # Initialize session_state for start_date if not already set
 if "start_date" not in st.session_state:
-    today = datetime.now()
+    today = st.session_state["today"]
     if time_ranges[st.session_state["selected_range"]] is not None:
         start_date = today - timedelta(days=time_ranges[st.session_state["selected_range"]])
         st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
@@ -125,7 +128,7 @@ if "start_date" not in st.session_state:
 # Function to update start_date in session_state when selection changes
 # Function to update the start date
 def update_start_date(selected_range):
-    today = datetime.now()
+    today = st.session_state["today"]
     if time_ranges[selected_range] is not None:
         start_date = today - timedelta(days=time_ranges[selected_range])
         st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
