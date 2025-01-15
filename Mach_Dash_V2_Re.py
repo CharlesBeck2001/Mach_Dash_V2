@@ -712,7 +712,6 @@ SELECT CAST(AVG(total_trades) AS INT) AS average_trades_per_user FROM user_trade
     SELECT COUNT(*) FROM user_trade_counts
     """
     
-    @st.cache_data
     def execute_sql(query):
         headers = {
             "apikey": supabase_key,
