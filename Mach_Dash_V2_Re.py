@@ -122,7 +122,8 @@ else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time
     #st.write(start_date)
 
-if start_date != st.session_state['start_date']:
+#if start_date != st.session_state['start_date']:
+if 1==1:
     st.session_state['start_date'] = start_date
 
     if 1 == 1:
