@@ -132,8 +132,6 @@ def update_start_date():
     else:
         # If "All Time", set it to a specific point (replace with your own logic)
         st.session_state["start_date"] = time_point['oldest_time'][0]
-    
-    st.experimental_rerun()
 
 # Create the selectbox and update session state only when a change occurs
 selected_range = st.selectbox(
