@@ -17,6 +17,12 @@ from datetime import datetime, timedelta
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
 supabase_key = st.secrets["supabase_key"]
 
+st.set_page_config(
+    page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
+    page_icon=":rocket:",           # Optional: Adds an icon to the tab
+    layout="wide"                   # Optional: Adjusts layout
+)
+
 @st.cache_data
 def execute_sql(query):
     headers = {
@@ -62,13 +68,6 @@ time_ranges = {
     "Last 3 Months": 90,
     "Last 6 Months": 180
 }
-
-# User selection
-st.set_page_config(
-    page_title="Tristero's Mach Exchange",  # Sets the headline/title in the browser tab
-    page_icon=":rocket:",           # Optional: Adds an icon to the tab
-    layout="wide"                   # Optional: Adjusts layout
-)
 
 # Add custom CSS to adjust width
 st.markdown(
