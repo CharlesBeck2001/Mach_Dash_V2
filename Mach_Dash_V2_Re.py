@@ -859,38 +859,44 @@ if 1==1:
     col1, col2, col3, col4, col5 = st.columns(5)
     
     total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
-    # Box 1
-    with col1:
-        st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
-        #st.line_chart(data["A"])
-    # Box 2
-    with col2:
-        st.metric(label="Total  Users", value=len(df_total_users))
-        #st.bar_chart(data["B"])
+
+    @st.cache_data
+    def stats_box_maker(st):
         
-    with col3:
-        st.metric(label="Total Trades", value=f"{trade_count:,}")
-        total_trades = trade_count
-    
-    with col4:
-        st.metric(label="Average Trades Per User", value=average_trades)
-    
-    with col5:
-        st.metric(label="Percent of Users With More Than 1 Trade",value=perc_above)
-    # Additional styling for more customization (optional)
-    st.markdown(
-        """
-        <style>
-        .stMetric {
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 5px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+        # Box 1
+        with col1:
+            st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
+            #st.line_chart(data["A"])
+        # Box 2
+        with col2:
+            st.metric(label="Total  Users", value=len(df_total_users))
+            #st.bar_chart(data["B"])
+            
+        with col3:
+            st.metric(label="Total Trades", value=f"{trade_count:,}")
+            total_trades = trade_count
+        
+        with col4:
+            st.metric(label="Average Trades Per User", value=average_trades)
+        
+        with col5:
+            st.metric(label="Percent of Users With More Than 1 Trade",value=perc_above)
+        # Additional styling for more customization (optional)
+        st.markdown(
+            """
+            <style>
+            .stMetric {
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 5px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    stats_box_maker(start_date)
 
 st.title("Volume Analysis")
 
