@@ -170,6 +170,8 @@ def execute_sql(query):
     else:
         print("Error executing query:", response.status_code, response.json())
 
+stats_placeholder = st.empty()
+
 #if start_date != st.session_state['start_date']:
 if 1==1:
 
@@ -917,7 +919,8 @@ if 1==1:
             unsafe_allow_html=True,
         )
 
-    stats_box_maker(st.session_state["start_date"])
+    with stats_placeholder.container():
+        stats_box_maker(st.session_state["start_date"])
 
 st.title("Volume Analysis")
 
