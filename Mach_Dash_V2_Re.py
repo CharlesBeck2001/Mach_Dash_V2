@@ -130,8 +130,8 @@ def update_start_date(selected_range):
         st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
     else:
         # If "All Time", set it to a specific point (replace with your own logic)
-        st.session_state["start_date"] = "1900-01-01T00:00:00"
-    st.session_state["selected_range"] = selected_range
+        st.session_state["start_date"] = time_point['oldest_time'][0]
+        st.session_state["selected_range"] = selected_range
 
 # Create the selectbox and update session state only when a change occurs
 selected_range = st.selectbox(
