@@ -2182,12 +2182,12 @@ st.subheader("User Portion by Volume")
 st.plotly_chart(fig, use_container_width=True)
 
 # Add percentage columns to session state dataframes
-st.session_state.df_trade_address['percentage_of_total_trades'] = (
-    st.session_state.df_trade_address['trade_count'] / (2*total_trades) * 100
+df_trade_address['percentage_of_total_trades'] = (
+    df_trade_address['trade_count'] / (2*total_trades) * 100
 ).round(2)
 
-st.session_state.df_volume_address['percentage_of_total_volume'] = (
-    st.session_state.df_volume_address['total_user_volume'] / (2*total_volume) * 100
+df_volume_address['percentage_of_total_volume'] = (
+    df_volume_address['total_user_volume'] / (2*total_volume) * 100
 ).round(2)
 
 
