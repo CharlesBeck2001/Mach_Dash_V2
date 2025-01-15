@@ -123,11 +123,11 @@ if "start_date" not in st.session_state:
         st.session_state["start_date"] = time_point['oldest_time'][0]
 
 # Function to update start_date in session_state when selection changes
-def update_start_date():
+def update_start_date(selected_range):
     # Update the selected_range value in session_state based on the selectbox
-    st.session_state["selected_range"] = st.session_state.get("selected_range", "All Time")
+    #st.session_state["selected_range"] = st.session_state.get("selected_range", "All Time")
     
-    selected_range = st.session_state["selected_range"]
+    #selected_range = st.session_state["selected_range"]
     today = datetime.now()
     if time_ranges[selected_range] is not None:
         start_date = today - timedelta(days=time_ranges[selected_range])
@@ -136,15 +136,14 @@ def update_start_date():
         # If "All Time", set it to a specific point (replace with your own logic)
         st.session_state["start_date"] = time_point['oldest_time'][0]
 
-# Create the selectbox and update session state only when a change occurs
+# Create the selectbox and update start_date when selection changes
 selected_range = st.selectbox(
     "Select a time range:",
     list(time_ranges.keys()),
-    index=list(time_ranges.keys()).index(st.session_state["selected_range"]),
+    index=list(time_ranges.keys()).index(st.session_state["selected_range"]) if "selected_range" in st.session_state else 0,
     key="range_selector",  # Use a unique key
     on_change=update_start_date,  # Trigger update when selection changes
 )
-
 # Display content based on the selected time range
 st.write(f"Data corresponding to time range: {st.session_state['selected_range']}")
 
