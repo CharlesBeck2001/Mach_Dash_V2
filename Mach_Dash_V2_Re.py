@@ -108,10 +108,24 @@ st.title("Mach Exchange Statistics")
 # Get today's date
 today = datetime.now()
 
-if 'start_date' not in st.session_state:
-    st.session_state['start_date'] = time_point['oldest_time'][0]
+# Use session state to track the selected range
+if "selected_range" not in st.session_state:
+    st.session_state["selected_range"] = "All Time"  # Default value
 
-selected_range = st.selectbox("Select a time range for statistics on Mach:", list(time_ranges.keys()))
+# Create the selectbox and update session state only when a change occurs
+selected_range = st.selectbox(
+    "Select a time range:",
+    list(time_ranges.keys()),
+    index=list(time_ranges.keys()).index(st.session_state["selected_range"]),
+    on_change=lambda: st.session_state.update({"selected_range": selected_range}),
+)
+
+# Display content based on the selected time range
+st.write(f"Data corresponding to time range: {st.session_state['selected_range']}")
+
+# Add static elements that won't change
+st.write("This content remains unaffected by the time range selection.")
+
 
 # Calculate the start date
 if time_ranges[selected_range] is not None:
