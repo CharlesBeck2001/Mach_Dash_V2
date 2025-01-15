@@ -143,10 +143,6 @@ selected_range = st.selectbox(
 # Update start_date when the selection changes
 update_start_date(selected_range)
 
-# Display content
-st.write(f"Data corresponding to time range: {selected_range}")
-st.write(f"Start date used for data: {st.session_state['start_date']}")
-
 @st.cache_data
 def execute_sql(query):
     headers = {
