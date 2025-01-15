@@ -142,6 +142,12 @@ selected_range = st.selectbox(
     on_change=update_start_date,  # Trigger update when selection changes
 )
 
+# Display content based on the selected time range
+st.write(f"Data corresponding to time range: {st.session_state['selected_range']}")
+
+# Add static elements that won't change
+st.write("This content remains unaffected by the time range selection.")
+
 @st.cache_data
 def execute_sql(query):
     headers = {
