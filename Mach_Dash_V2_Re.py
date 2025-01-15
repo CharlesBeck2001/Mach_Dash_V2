@@ -120,13 +120,40 @@ if time_ranges[selected_range] is not None:
     #st.write(start_date)
 else:
     start_date = time_point['oldest_time'][0]  # No filter for "All Time
-    #st.write(start_date)
+
+@st.cache_data
+def execute_sql(query):
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
+        "Content-Type": "application/json"
+    }
+    # Endpoint for the RPC function
+    rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
+    
+    # Payload with the SQL query
+    payload = {"query": query}
+    
+    # Make the POST request to the RPC function
+    response = requests.post(rpc_endpoint, headers=headers, json=payload)
+    
+    # Handle response
+    if response.status_code == 200:
+        data = response.json()
+        
+        df = pd.DataFrame(data)
+        
+        print("Query executed successfully, returning DataFrame.")
+        return(df)
+    else:
+        print("Error executing query:", response.status_code, response.json())
 
 #if start_date != st.session_state['start_date']:
 if 1==1:
     st.session_state['start_date'] = start_date
 
-    if 1 == 1:
+    @st.cache_data
+    def stats_box_maker(sd):
  # Supabase credentials
         supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
         supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
@@ -136,7 +163,7 @@ if 1==1:
         FROM order_placed op
         INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         """
     
         sql_query2 = f"""
@@ -157,7 +184,7 @@ if 1==1:
       ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS(
     SELECT DISTINCT
@@ -176,7 +203,7 @@ if 1==1:
       ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS(
     SELECT DISTINCT
@@ -222,7 +249,7 @@ if 1==1:
       ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS(
     SELECT DISTINCT
@@ -241,7 +268,7 @@ if 1==1:
       ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS(
     SELECT DISTINCT
@@ -282,7 +309,7 @@ if 1==1:
       ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS(
     SELECT DISTINCT
@@ -301,7 +328,7 @@ if 1==1:
       ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS(
     SELECT DISTINCT
@@ -334,7 +361,7 @@ if 1==1:
         FROM order_placed op
         INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         GROUP BY DATE_PART('hour', op.block_timestamp)
         ORDER BY DATE_PART('hour', op.block_timestamp)
         """
@@ -346,7 +373,7 @@ if 1==1:
         FROM order_placed op
         INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         GROUP BY DATE(op.block_timestamp)
         ORDER BY trade_date
         """
@@ -358,7 +385,7 @@ if 1==1:
         FROM order_placed op
         INNER JOIN match_executed me
         ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         GROUP BY DATE_TRUNC('week', op.block_timestamp)
         ORDER BY week_start_date
         """
@@ -376,7 +403,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{sd}'
         ) AS unique_addresses
         """
         
@@ -385,7 +412,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{sd}'
         """
         
         sql_query10 = f"""
@@ -402,7 +429,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{sd}'
         ) AS all_trades
         GROUP BY address
         ORDER BY trade_count DESC
@@ -430,7 +457,7 @@ if 1==1:
             ON op.source_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
         SELECT DISTINCT
@@ -452,7 +479,7 @@ if 1==1:
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
         SELECT DISTINCT
@@ -497,7 +524,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{sd}'
         ) AS all_trades
         GROUP BY address
         ),
@@ -537,7 +564,7 @@ if 1==1:
             ON op.source_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date}'
+        WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -559,7 +586,7 @@ if 1==1:
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -625,7 +652,7 @@ if 1==1:
         ON op.source_asset = cal.address
       INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
-      WHERE op.block_timestamp >= '{start_date}'
+      WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS(
     SELECT DISTINCT
@@ -644,7 +671,7 @@ if 1==1:
       ON op.dest_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
       ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS(
     SELECT DISTINCT
@@ -712,39 +739,14 @@ if 1==1:
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
             WHERE op.sender_address = me.maker_address
-              AND op.block_timestamp >= '{start_date}'
+              AND op.block_timestamp >= '{sd}'
             GROUP BY op.sender_address
         )   
         SELECT COUNT(*) FROM user_trade_counts
         """
         
-        @st.cache_data
-        def execute_sql(query):
-            headers = {
-                "apikey": supabase_key,
-                "Authorization": f"Bearer {supabase_key}",
-                "Content-Type": "application/json"
-            }
-            # Endpoint for the RPC function
-            rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
-            
-            # Payload with the SQL query
-            payload = {"query": query}
-            
-            # Make the POST request to the RPC function
-            response = requests.post(rpc_endpoint, headers=headers, json=payload)
-            
-            # Handle response
-            if response.status_code == 200:
-                data = response.json()
-                
-                df = pd.DataFrame(data)
-                
-                print("Query executed successfully, returning DataFrame.")
-                return(df)
-            else:
-                print("Error executing query:", response.status_code, response.json())
-    
+        
+        
         df_sql_timeframe = execute_sql(sql_query1)
         df_sql_timeframe = pd.json_normalize(df_sql_timeframe['result'])
         #st.write(df_sql_timeframe)
@@ -855,13 +857,11 @@ if 1==1:
         dfs["daily_volume"]['day'] = dfs["daily_volume"]['day'].dt.strftime('%B %d, %Y')
         dfs["weekly_volume"]["week_starting"] = dfs["weekly_volume"]["week_starting"].dt.strftime('%B %d, %Y')
         
-    # Define the layout
-    col1, col2, col3, col4, col5 = st.columns(5)
+        # Define the layout
+        col1, col2, col3, col4, col5 = st.columns(5)
     
-    total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
+        total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
 
-    @st.cache_data
-    def stats_box_maker(st):
         
         # Box 1
         with col1:
