@@ -3159,12 +3159,10 @@ if "preloaded_6" not in st.session_state:
 
     st.session_state["preloaded_6"] = preloaded_6
 
-st.write(st.session_state["preloaded_6"])
-
 if time_ranges[selected_range_6] is not None:
-    vol_hist_and_pie(st.session_state["preloaded_6"][time_ranges[selected_range_6]])
+    fill_time_builds(st.session_state["preloaded_6"][time_ranges[selected_range_6]])
 else:
-    vol_hist_and_pie(st.session_state["preloaded_6"][0])
+    fill_time_builds(st.session_state["preloaded_6"][0])
 
 
 asset_query = """
