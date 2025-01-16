@@ -1002,7 +1002,6 @@ def asset_fetch(sd):
             ON op.source_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS (
         SELECT DISTINCT
@@ -1021,7 +1020,6 @@ def asset_fetch(sd):
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS (
         SELECT DISTINCT
