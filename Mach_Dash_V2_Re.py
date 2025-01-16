@@ -2545,154 +2545,159 @@ if 'df_trade_address' not in st.session_state:
     st.session_state.page_trade = 0
     st.session_state.page_volume = 0
 
-
-sql_query = f"""
-WITH source_volume_table AS(
-  SELECT DISTINCT
-    op.*, 
-    ti.decimals as source_decimal,
-    cal.id as source_id,
-    cal.chain as source_chain,
-    cmd.current_price::FLOAT AS source_price,
-    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
-  FROM order_placed op
-  INNER JOIN match_executed me
-    ON op.order_uuid = me.order_uuid
-  INNER JOIN token_info ti
-    ON op.source_asset = ti.address
-  INNER JOIN coingecko_assets_list cal
-    ON op.source_asset = cal.address
-  INNER JOIN coingecko_market_data cmd 
-    ON cal.id = cmd.id
-  WHERE op.block_timestamp >= '{start_date_5}'
-),
-dest_volume_table AS(
-  SELECT DISTINCT
-    op.*, 
-    ti.decimals as dest_decimal,
-    cal.id as dest_id,
-    cal.chain as dest_chain,
-    cmd.current_price::FLOAT AS dest_price,
-    (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
-  FROM order_placed op
-  INNER JOIN match_executed me
-    ON op.order_uuid = me.order_uuid
-  INNER JOIN token_info ti
-    ON op.dest_asset = ti.address
-  INNER JOIN coingecko_assets_list cal
-    ON op.dest_asset = cal.address
-  INNER JOIN coingecko_market_data cmd 
-    ON cal.id = cmd.id
-  WHERE op.block_timestamp >= '{start_date_5}'
-),
-overall_volume_table_2 AS(
-  SELECT DISTINCT
-    svt.*,
-    dvt.dest_id as dest_id,
-    dvt.dest_chain as dest_chain,
-    dvt.dest_decimal as dest_decimal,
-    dvt.dest_price as dest_price,
-    dvt.dest_volume as dest_volume,
-    (dvt.dest_volume + svt.source_volume) as total_volume
-  FROM source_volume_table svt
-  INNER JOIN dest_volume_table dvt
-    ON svt.order_uuid = dvt.order_uuid
-)
-SELECT 
-    source_chain,
-    source_id,
-    dest_chain,
-    dest_id,
-    SUM(source_volume) AS total_source_volume,
-    SUM(dest_volume) AS total_dest_volume
-FROM 
-    overall_volume_table_2
-GROUP BY 
-    source_chain, source_id, dest_chain, dest_id
-ORDER BY 
-    total_source_volume DESC
-"""
-
-# Fetch and normalize data
-data = execute_sql(sql_query)
-data = pd.json_normalize(data['result'])
-
-# Label sources and destinations for assets and chains
-data["source_chain"] = data["source_chain"] + " (S)"
-data["dest_chain"] = data["dest_chain"] + " (D)"
-data["source_id"] = data["source_id"] + " (S)"
-data["dest_id"] = data["dest_id"] + " (D)"
-
-# Compute total volume for assets
-source_asset_volume = data.groupby("source_id")["total_source_volume"].sum().reset_index()
-dest_asset_volume = data.groupby("dest_id")["total_dest_volume"].sum().reset_index()
-
-# Combine source and destination volumes for assets
-asset_volume = pd.concat([
-    source_asset_volume.rename(columns={"source_id": "asset", "total_source_volume": "total_volume"}),
-    dest_asset_volume.rename(columns={"dest_id": "asset", "total_dest_volume": "total_volume"})
-])
-asset_volume = asset_volume.groupby("asset")["total_volume"].sum().reset_index()
-
-# Get top 10 assets by total volume
-top_assets = asset_volume.nlargest(10, "total_volume")["asset"]
-
-# Create a new dataframe for the top 10 assets
-top_asset_data = data[
-    data["source_id"].isin(top_assets) | data["dest_id"].isin(top_assets)
-][["source_id", "dest_id", "total_source_volume", "total_dest_volume"]].copy()
-
-# Compute total volume for chains
-source_chain_volume = data.groupby("source_chain")["total_source_volume"].sum().reset_index()
-dest_chain_volume = data.groupby("dest_chain")["total_dest_volume"].sum().reset_index()
-
-# Combine source and destination volumes for chains
-chain_volume = pd.concat([
-    source_chain_volume.rename(columns={"source_chain": "chain", "total_source_volume": "total_volume"}),
-    dest_chain_volume.rename(columns={"dest_chain": "chain", "total_dest_volume": "total_volume"})
-])
-chain_volume = chain_volume.groupby("chain")["total_volume"].sum().reset_index()
-
-# Get top 10 chains by total volume
-top_chains = chain_volume.nlargest(10, "total_volume")["chain"]
-
-# Create a new dataframe for the top 10 chains
-top_chain_data = data[
-    data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
-][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
-
-# Consolidate data for assets by grouping and summing volumes
-consolidated_asset_data = top_asset_data.groupby(
-    ["source_id", "dest_id"], as_index=False
-).agg({
-    "total_source_volume": "sum",
-    "total_dest_volume": "sum"
-})
-
-# Compute average volume for consolidated asset data
-consolidated_asset_data["avg_volume"] = (
-    consolidated_asset_data["total_source_volume"] + consolidated_asset_data["total_dest_volume"]
-) / 2
-
-# Select top 10 rows based on avg_volume
-top_asset_data = consolidated_asset_data.nlargest(10, "avg_volume")
-
-# Consolidate data for chains by grouping and summing volumes
-consolidated_chain_data = top_chain_data.groupby(
-    ["source_chain", "dest_chain"], as_index=False
-).agg({
-    "total_source_volume": "sum",
-    "total_dest_volume": "sum"
-})
-
-# Compute average volume for consolidated chain data
-consolidated_chain_data["avg_volume"] = (
-    consolidated_chain_data["total_source_volume"] + consolidated_chain_data["total_dest_volume"]
-) / 2
-
-# Select top 10 rows based on avg_volume
-top_chain_data = consolidated_chain_data.nlargest(10, "avg_volume")
-# Adjust Sankey function to handle filtered dataframes
+def sankey_data(sd):
+    sql_query = f"""
+    WITH source_volume_table AS(
+      SELECT DISTINCT
+        op.*, 
+        ti.decimals as source_decimal,
+        cal.id as source_id,
+        cal.chain as source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+      FROM order_placed op
+      INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+      INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+      INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+      INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+      WHERE op.block_timestamp >= '{sd}'
+    ),
+    dest_volume_table AS(
+      SELECT DISTINCT
+        op.*, 
+        ti.decimals as dest_decimal,
+        cal.id as dest_id,
+        cal.chain as dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+      FROM order_placed op
+      INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+      INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+      INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+      INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+      WHERE op.block_timestamp >= '{sd}'
+    ),
+    overall_volume_table_2 AS(
+      SELECT DISTINCT
+        svt.*,
+        dvt.dest_id as dest_id,
+        dvt.dest_chain as dest_chain,
+        dvt.dest_decimal as dest_decimal,
+        dvt.dest_price as dest_price,
+        dvt.dest_volume as dest_volume,
+        (dvt.dest_volume + svt.source_volume) as total_volume
+      FROM source_volume_table svt
+      INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+    )
+    SELECT 
+        source_chain,
+        source_id,
+        dest_chain,
+        dest_id,
+        SUM(source_volume) AS total_source_volume,
+        SUM(dest_volume) AS total_dest_volume
+    FROM 
+        overall_volume_table_2
+    GROUP BY 
+        source_chain, source_id, dest_chain, dest_id
+    ORDER BY 
+        total_source_volume DESC
+    """
+    
+    # Fetch and normalize data
+    data = execute_sql(sql_query)
+    data = pd.json_normalize(data['result'])
+    
+    # Label sources and destinations for assets and chains
+    data["source_chain"] = data["source_chain"] + " (S)"
+    data["dest_chain"] = data["dest_chain"] + " (D)"
+    data["source_id"] = data["source_id"] + " (S)"
+    data["dest_id"] = data["dest_id"] + " (D)"
+    
+    # Compute total volume for assets
+    source_asset_volume = data.groupby("source_id")["total_source_volume"].sum().reset_index()
+    dest_asset_volume = data.groupby("dest_id")["total_dest_volume"].sum().reset_index()
+    
+    # Combine source and destination volumes for assets
+    asset_volume = pd.concat([
+        source_asset_volume.rename(columns={"source_id": "asset", "total_source_volume": "total_volume"}),
+        dest_asset_volume.rename(columns={"dest_id": "asset", "total_dest_volume": "total_volume"})
+    ])
+    asset_volume = asset_volume.groupby("asset")["total_volume"].sum().reset_index()
+    
+    # Get top 10 assets by total volume
+    top_assets = asset_volume.nlargest(10, "total_volume")["asset"]
+    
+    # Create a new dataframe for the top 10 assets
+    top_asset_data = data[
+        data["source_id"].isin(top_assets) | data["dest_id"].isin(top_assets)
+    ][["source_id", "dest_id", "total_source_volume", "total_dest_volume"]].copy()
+    
+    # Compute total volume for chains
+    source_chain_volume = data.groupby("source_chain")["total_source_volume"].sum().reset_index()
+    dest_chain_volume = data.groupby("dest_chain")["total_dest_volume"].sum().reset_index()
+    
+    # Combine source and destination volumes for chains
+    chain_volume = pd.concat([
+        source_chain_volume.rename(columns={"source_chain": "chain", "total_source_volume": "total_volume"}),
+        dest_chain_volume.rename(columns={"dest_chain": "chain", "total_dest_volume": "total_volume"})
+    ])
+    chain_volume = chain_volume.groupby("chain")["total_volume"].sum().reset_index()
+    
+    # Get top 10 chains by total volume
+    top_chains = chain_volume.nlargest(10, "total_volume")["chain"]
+    
+    # Create a new dataframe for the top 10 chains
+    top_chain_data = data[
+        data["source_chain"].isin(top_chains) | data["dest_chain"].isin(top_chains)
+    ][["source_chain", "dest_chain", "total_source_volume", "total_dest_volume"]].copy()
+    
+    # Consolidate data for assets by grouping and summing volumes
+    consolidated_asset_data = top_asset_data.groupby(
+        ["source_id", "dest_id"], as_index=False
+    ).agg({
+        "total_source_volume": "sum",
+        "total_dest_volume": "sum"
+    })
+    
+    # Compute average volume for consolidated asset data
+    consolidated_asset_data["avg_volume"] = (
+        consolidated_asset_data["total_source_volume"] + consolidated_asset_data["total_dest_volume"]
+    ) / 2
+    
+    # Select top 10 rows based on avg_volume
+    top_asset_data = consolidated_asset_data.nlargest(10, "avg_volume")
+    
+    # Consolidate data for chains by grouping and summing volumes
+    consolidated_chain_data = top_chain_data.groupby(
+        ["source_chain", "dest_chain"], as_index=False
+    ).agg({
+        "total_source_volume": "sum",
+        "total_dest_volume": "sum"
+    })
+    
+    # Compute average volume for consolidated chain data
+    consolidated_chain_data["avg_volume"] = (
+        consolidated_chain_data["total_source_volume"] + consolidated_chain_data["total_dest_volume"]
+    ) / 2
+    
+    # Select top 10 rows based on avg_volume
+    top_chain_data = consolidated_chain_data.nlargest(10, "avg_volume")
+    # Adjust Sankey function to handle filtered dataframes
+    return {
+            "top_asset_data": top_asset_data,
+            "top_chain_data": top_chain_data,
+    }
+    
 def create_sankey_chart(df, source_col, target_col, value_col):
     unique_nodes = list(pd.unique(df[[source_col, target_col]].values.ravel("K")))
     node_map = {node: i for i, node in enumerate(unique_nodes)}
@@ -2715,17 +2720,47 @@ def create_sankey_chart(df, source_col, target_col, value_col):
     )])
     return fig
 
-st.subheader("Asset Flow Chart")
-asset_chart = create_sankey_chart(
-    top_asset_data, "source_id", "dest_id", "total_source_volume"
-)
-st.plotly_chart(asset_chart)
+if "preloaded_5" not in st.session_state:
+    preloaded_5 = {}
+    for i in day_list:
+        date = today - timedelta(days=i)
+        date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    
+        data = sankey_data(date)
+        preloaded_5[i] = data
+    
+    date = time_point['oldest_time'][0]
+    data = sankey_data(date)
+    preloaded_5[0] = data
 
-st.subheader("Chain Flow Chart")
-chain_chart = create_sankey_chart(
-    top_chain_data, "source_chain", "dest_chain", "total_source_volume"
-)
-st.plotly_chart(chain_chart)
+    st.session_state["preloaded_5"] = preloaded_5
+
+if time_ranges[selected_range_5] is not None:
+    
+    st.subheader("Asset Flow Chart")
+    asset_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_asset_data'], "source_id", "dest_id", "total_source_volume"
+    )
+    st.plotly_chart(asset_chart)
+    
+    st.subheader("Chain Flow Chart")
+    chain_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
+    )
+    
+else:
+    
+    st.subheader("Asset Flow Chart")
+    asset_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][0]['top_asset_data'], "source_id", "dest_id", "total_source_volume"
+    )
+    st.plotly_chart(asset_chart)
+    
+    st.subheader("Chain Flow Chart")
+    chain_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][0]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
+    )
+
 
 time_ranges_6 = {
     "All Time": None,  # Special case for no date filter
