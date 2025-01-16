@@ -982,7 +982,7 @@ else:
     start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
-def asset_fetch(sd)
+def asset_fetch(sd):
     asset_query = f"""
     WITH source_volume_table AS (
         SELECT DISTINCT
