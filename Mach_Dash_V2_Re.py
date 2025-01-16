@@ -2747,6 +2747,7 @@ if time_ranges[selected_range_5] is not None:
     chain_chart = create_sankey_chart(
         st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
+    st.plotly_chart(chain_chart)
     
 else:
     
@@ -2760,6 +2761,7 @@ else:
     chain_chart = create_sankey_chart(
         st.session_state["preloaded_5"][0]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
+    st.plotly_chart(chain_chart)
 
 
 time_ranges_6 = {
