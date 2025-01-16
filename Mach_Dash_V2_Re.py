@@ -899,7 +899,6 @@ if 1==1:
     @st.cache_resource
     def preload_metrics(dl):
         # Define the layout
-        j = 1
         preloaded = {}
         for i in dl:
             
@@ -944,18 +943,64 @@ if 1==1:
                 unsafe_allow_html=True,
                 )
             
-            preloaded[j] = st.container()
-            j = j+1
+            preloaded[i] = st.container()
+
+        date = time_point['oldest_time'][0]
+
+        data = stats_box_maker(date)
+
+        with st.container():
+                
+            col1, col2, col3, col4, col5 = st.columns(5)
+            
+            # Box 1
+            with col1:
+                st.metric(label="Total Volume", value=f"${data['total_volume']:,.2f}")
+                #st.line_chart(data["A"])
+            # Box 2
+            with col2:
+                st.metric(label="Total  Users", value=data['total_users'])
+                #st.bar_chart(data["B"])
+                
+            with col3:
+                st.metric(label="Total Trades", value=f"{data['trade_count']:,}")
+                total_trades = trade_count
+            
+            with col4:
+                st.metric(label="Average Trades Per User", value=data['average_trades'])
+            
+            with col5:
+                st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
+    
+            st.markdown(
+            """
+            <style>
+            .stMetric {
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 5px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+            )
+        
+        preloaded[0] = st.container()
         
         return(preloaded)
         # Additional styling for more customization (optional)
         
         
 with st.spinner("Preloading metrics for all time periods..."):
-    preloaded_metrics = preload_metrics(days_list)
+    preloaded_metrics = preload_metrics(day_list)
 st.success("Metrics preloaded for all time periods!")
 
-stats_box_maker(st.session_state["start_date"])
+if time_ranges[selected_range] is not None:
+    st.write(preloaded_metrics[time_ranges[selected_range]])
+else:
+    st.write(preloaded_metrics[0])
+    
 
 st.title("Volume Analysis")
 
