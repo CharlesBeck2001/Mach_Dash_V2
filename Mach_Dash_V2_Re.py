@@ -1450,6 +1450,7 @@ with col2:
             # Fetch data for the selected assets
             data = st.session_state["preloaded_2"][asset + ' Daily Value']
             data = data[data['day'] > start_date_2]
+            st.write(data)
 
             if data.empty:
                 st.warning(f"No data available for {asset}!")
