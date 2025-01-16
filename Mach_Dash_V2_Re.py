@@ -1542,7 +1542,7 @@ with col1:
         else:
 
             data = data = st.session_state["preloaded_2"]['Total Daily Value']
-            data = data[data['day'] > start_date_2]
+            data = data[pd.to_datetime(data['day']) > pd.to_datetime(start_date_2)]
 
             if data.empty:
                 st.warning(f"No data available for Total!")
