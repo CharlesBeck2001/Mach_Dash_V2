@@ -180,7 +180,7 @@ def execute_sql(query):
 #if start_date != st.session_state['start_date']:
 if 1==1:
     
-    @st.cache_resource
+    @st.cache_data
     def stats_box_maker(sd):
  # Supabase credentials
         supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
