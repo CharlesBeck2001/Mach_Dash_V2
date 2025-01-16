@@ -982,6 +982,7 @@ else:
     start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
+@st.cache_data
 def asset_fetch(sd):
     asset_query = f"""
     WITH source_volume_table AS (
@@ -1067,7 +1068,7 @@ asset_list = asset_fetch(start_date_2)
 
 # Function to execute query and retrieve data
 @st.cache_data
-def get_volume_vs_date(asset_id):
+def get_volume_vs_date(asset_id, sd):
     """
     Query the Supabase database to get total volume vs date for a specific asset.
 
@@ -1097,7 +1098,7 @@ def get_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1116,7 +1117,7 @@ def get_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1160,7 +1161,7 @@ def get_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1179,7 +1180,7 @@ def get_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1207,7 +1208,7 @@ def get_volume_vs_date(asset_id):
     return pd.json_normalize(execute_sql(query)['result'])
 
 @st.cache_data
-def get_weekly_volume_vs_date(asset_id):
+def get_weekly_volume_vs_date(asset_id, sd):
     """
     Query the Supabase database to get weekly averaged volume vs date for a specific asset.
 
@@ -1246,7 +1247,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1265,7 +1266,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1313,7 +1314,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        WHERE day >= '{start_date_2}'
+        WHERE day >= '{sd}'
         ORDER BY day
         """
     else:
@@ -1344,7 +1345,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1363,7 +1364,7 @@ def get_weekly_volume_vs_date(asset_id):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{start_date_2}'
+            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
@@ -1410,7 +1411,7 @@ def get_weekly_volume_vs_date(asset_id):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        WHERE day >= '{start_date_2}'
+        WHERE day >= '{sd}'
         ORDER BY day
         """
     # Execute the query and return the result as a DataFrame
@@ -1418,13 +1419,28 @@ def get_weekly_volume_vs_date(asset_id):
 
 
 asset_list = asset_list[:5]
-st.write(asset_list)
 asset_list = ['Total'] + asset_list
+
+if "preloaded_2" not in st.session_state:
+    preloaded_2 = {}
+    for asset in asset_list:
+        
+        daily_vol = get_volume_vs_date(asset, time_point['oldest_time'][0])
+        weekly_vol = get_weekly_volume_vs_date(asset, time_point['oldest_time'][0])
+        preloaded_2[asset + ' Weekly Average'] = weekly_vol
+        preloaded_2[asset + ' Daily Value'] = daily_vol
+
+    st.session_state["preloaded_2"] = preloaded_2
+
+st.write(st.session_state["preloaded_2"]['Total Daily Value'])
+
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
 
 # Initialize an empty DataFrame to collect data for all assets
 all_assets_data = pd.DataFrame()
+
+
 
 
 col1, col2 = st.columns(2)
