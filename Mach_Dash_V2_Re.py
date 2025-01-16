@@ -2091,7 +2091,7 @@ if "preloaded_3" not in st.session_state:
         preloaded_3[i] = data
     
     date = time_point['oldest_time'][0]
-    data = histogram_data((date)
+    data = histogram_data(date)
     preloaded_3[0] = data
 
     st.session_state["preloaded_3"] = preloaded_3
