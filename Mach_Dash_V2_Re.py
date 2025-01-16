@@ -1575,17 +1575,16 @@ time_ranges_3 = {
 }
 
 # Get today's date
-today = datetime.now()
+#today = datetime.now()
 
-selected_range_3 = st.selectbox("Select a time range for the volume distribution data:", list(time_ranges_3.keys()))
 
 # Calculate the start date
-if time_ranges[selected_range_3] is not None:
-    start_date_3 = today - timedelta(days=time_ranges_3[selected_range_3])
-    start_date_3 = start_date_3.strftime('%Y-%m-%dT%H:%M:%S')
+#if time_ranges[selected_range_3] is not None:
+    #start_date_3 = today - timedelta(days=time_ranges_3[selected_range_3])
+    #start_date_3 = start_date_3.strftime('%Y-%m-%dT%H:%M:%S')
     #st.write(start_date)
-else:
-    start_date_3 = time_point['oldest_time'][0]  # No filter for "All Time"
+#else:
+    #start_date_3 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
 
@@ -2096,6 +2095,8 @@ if "preloaded_3" not in st.session_state:
 
     st.session_state["preloaded_3"] = preloaded_3
 
+selected_range_3 = st.selectbox("Select a time range for the volume distribution data:", list(time_ranges.keys()))
+
 if time_ranges[selected_range_3] is not None:
     vol_hist_and_pie(st.session_state["preloaded_3"][time_ranges[selected_range_3]])
 else:
@@ -2111,7 +2112,7 @@ time_ranges_4 = {
 }
 
 # Get today's date
-today = datetime.now()
+#today = datetime.now()
 
 selected_range_4 = st.selectbox("Select a time range for the user distribution histograms:", list(time_ranges_4.keys()))
 
