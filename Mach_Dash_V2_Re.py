@@ -927,18 +927,18 @@ if 1==1:
         )
         # Additional styling for more customization (optional)
         
-
-preloaded = {}
-for i in day_list:
-    date = today - timedelta(days=i)
-    date = date.strftime('%Y-%m-%dT%H:%M:%S')
-
+if not preloaded:
+    preloaded = {}
+    for i in day_list:
+        date = today - timedelta(days=i)
+        date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    
+        data = stats_box_maker(date)
+        preloaded[i] = data
+    
+    date = time_point['oldest_time'][0]
     data = stats_box_maker(date)
-    preloaded[i] = data
-
-date = time_point['oldest_time'][0]
-data = stats_box_maker(date)
-preloaded[0] = data
+    preloaded[0] = data
 
 
 selected_range = st.selectbox(
