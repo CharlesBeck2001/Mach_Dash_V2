@@ -2988,31 +2988,6 @@ def fill_time_gather(sd):
     LIMIT 10
     """
 
-
-    @st.cache_data
-    def execute_sql(query):
-        headers = {
-            "apikey": supabase_key,
-            "Authorization": f"Bearer {supabase_key}",
-            "Content-Type": "application/json"
-        }
-        # Endpoint for the RPC function
-        rpc_endpoint = f"{supabase_url}/rest/v1/rpc/execute_sql"
-        
-        # Payload with the SQL query
-        payload = {"query": query}
-        
-        # Make the POST request to the RPC function
-        response = requests.post(rpc_endpoint, headers=headers, json=payload)
-        
-        # Handle response
-        if response.status_code == 200:
-            data = response.json()
-            df = pd.DataFrame(data)
-            return df
-        else:
-            print("Error executing query:", response.status_code, response.json())
-
     # Call the function
     df_fill_time_date = execute_sql(sql_query1)
     df_fill_time_s_chain = execute_sql(sql_query2)
@@ -3048,7 +3023,6 @@ def fill_time_gather(sd):
 
 def fill_time_builds(load):
     # Create two columns to place the charts next to each other
-    col1, col2, col3, col4 = st.columns([4, 4, 2, 2])
 
     df_fill_time_date = load['df_fill_time_date']
     df_fill_time_s_chain = load['df_fill_time_s_chain']
@@ -3057,6 +3031,8 @@ def fill_time_builds(load):
     df_fill_time_highest = load['df_fill_time_highest']
     df_fill_time_lowest = load['df_fill_time_lowest']
     # First chart (Chain Pair vs Median Fill Time)
+
+    col1, col2, col3, col4 = st.columns([4, 4, 2, 2])
     with col1:
         st.subheader('Median Fill Time by Chain Pair')
         chart_chain = alt.Chart(df_fill_time_chain).mark_bar().encode(
@@ -3164,6 +3140,8 @@ def fill_time_builds(load):
         #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
         df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
         st.dataframe(df_fill_time_highest_reform)   
+
+    return
 
 if "preloaded_6" not in st.session_state:
     preloaded_6 = {}
