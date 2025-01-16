@@ -921,7 +921,7 @@ if 1==1:
                     
                 with col3:
                     st.metric(label="Total Trades", value=f"{data['trade_count']:,}")
-                    total_trades = trade_count
+                    total_trades = data['trade_count']
                 
                 with col4:
                     st.metric(label="Average Trades Per User", value=data['average_trades'])
