@@ -1437,7 +1437,7 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 all_assets_data = pd.DataFrame()
 
 
-st.write(start_date_2)
+st.write(pd.to_datetime(start_date_2))
 st.write(st.session_state["preloaded_2"]['Total Daily Value']['day'])
 
 col1, col2 = st.columns(2)
