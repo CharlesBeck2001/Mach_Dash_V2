@@ -1450,7 +1450,6 @@ with col2:
             # Fetch data for the selected assets
             data = st.session_state["preloaded_2"][asset + ' Daily Value']
             data = data[data['day'] > start_date_2]
-            st.write(data)
 
             if data.empty:
                 st.warning(f"No data available for {asset}!")
@@ -1458,6 +1457,7 @@ with col2:
                 # Add the 'asset' column (asset name is already included in 'data')
                 all_assets_data = pd.concat([all_assets_data, data])
 
+    
     # Ensure the 'day' column is of datetime type
     all_assets_data['day'] = pd.to_datetime(all_assets_data['day'])
 
@@ -1474,6 +1474,7 @@ with col2:
     # Calculate cumulative sum for each asset
     cumulative_data = pivot_data.cumsum()
 
+    st.write(cumulative_data)
     # Plot the cumulative data using st.line_chart
     st.line_chart(cumulative_data, use_container_width=True)
 
