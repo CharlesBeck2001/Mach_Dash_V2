@@ -927,7 +927,7 @@ if 1==1:
         )
         # Additional styling for more customization (optional)
         
-if not preloaded:
+if "preloaded" not in st.session_state:
     preloaded = {}
     for i in day_list:
         date = today - timedelta(days=i)
@@ -940,6 +940,8 @@ if not preloaded:
     data = stats_box_maker(date)
     preloaded[0] = data
 
+    st.session_state["preloaded"] = preloaded
+
 
 selected_range = st.selectbox(
     "Select a time range:",
@@ -951,9 +953,9 @@ selected_range = st.selectbox(
 # Update start_date when the selection changes
 update_start_date(selected_range)
 if time_ranges[selected_range] is not None:
-    load_metrics(preloaded[time_ranges[selected_range]])
+    load_metrics(st.session_state["preloaded"][time_ranges[selected_range]])
 else:
-    load_metrics(preloaded[0])
+    load_metrics(st.session_state["preloaded"][0])
     
 
 st.title("Volume Analysis")
