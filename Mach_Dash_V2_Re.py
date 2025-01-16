@@ -899,49 +899,61 @@ if 1==1:
     @st.cache_resource
     def preload_metrics(dl):
         # Define the layout
+        j = 1
+        preloaded = {}
         for i in dl:
             
             date = today - timedelta(days=i)
             date = date.strftime('%Y-%m-%dT%H:%M:%S')
 
             data = stats_box_maker(date)
-        
-            col1, col2, col3, col4, col5 = st.columns(5)
-            
-            # Box 1
-            with col1:
-                st.metric(label="Total Volume", value=f"${data['total_volume']:,.2f}")
-                #st.line_chart(data["A"])
-            # Box 2
-            with col2:
-                st.metric(label="Total  Users", value=data['total_users'])
-                #st.bar_chart(data["B"])
+            with st.container():
                 
-            with col3:
-                st.metric(label="Total Trades", value=f"{data['trade_count']:,}")
-                total_trades = trade_count
+                col1, col2, col3, col4, col5 = st.columns(5)
+                
+                # Box 1
+                with col1:
+                    st.metric(label="Total Volume", value=f"${data['total_volume']:,.2f}")
+                    #st.line_chart(data["A"])
+                # Box 2
+                with col2:
+                    st.metric(label="Total  Users", value=data['total_users'])
+                    #st.bar_chart(data["B"])
+                    
+                with col3:
+                    st.metric(label="Total Trades", value=f"{data['trade_count']:,}")
+                    total_trades = trade_count
+                
+                with col4:
+                    st.metric(label="Average Trades Per User", value=data['average_trades'])
+                
+                with col5:
+                    st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
+    
+                st.markdown(
+                """
+                <style>
+                .stMetric {
+                    border: 1px solid #ccc;
+                    border-radius: 10px;
+                    padding: 10px;
+                    margin: 5px;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True,
+                )
             
-            with col4:
-                st.metric(label="Average Trades Per User", value=data['average_trades'])
-            
-            with col5:
-                st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
-        # Additional styling for more customization (optional)
-        st.markdown(
-            """
-            <style>
-            .stMetric {
-                border: 1px solid #ccc;
-                border-radius: 10px;
-                padding: 10px;
-                margin: 5px;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+            preloaded[j] = st.container()
+            j = j+1
         
-st.success("Diagrams preloaded for all time periods!")
+        return(preloaded)
+        # Additional styling for more customization (optional)
+        
+        
+with st.spinner("Preloading metrics for all time periods..."):
+    preloaded_metrics = preload_metrics(days_list)
+st.success("Metrics preloaded for all time periods!")
 
 stats_box_maker(st.session_state["start_date"])
 
