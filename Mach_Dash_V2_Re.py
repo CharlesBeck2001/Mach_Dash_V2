@@ -1062,6 +1062,7 @@ asset_list = execute_sql(asset_query)
 asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
 
 # Function to execute query and retrieve data
+@st.cache_data
 def get_volume_vs_date(asset_id):
     """
     Query the Supabase database to get total volume vs date for a specific asset.
@@ -1201,6 +1202,7 @@ def get_volume_vs_date(asset_id):
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
+@st.cache_data
 def get_weekly_volume_vs_date(asset_id):
     """
     Query the Supabase database to get weekly averaged volume vs date for a specific asset.
