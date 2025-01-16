@@ -961,7 +961,7 @@ else:
 st.title("Volume Analysis")
 
 # Get today's date
-today = datetime.now()
+#today = datetime.now()
 
 time_ranges_2 = {
     "All Time": None,  # Special case for no date filter
@@ -982,84 +982,88 @@ else:
     start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
-asset_query = f"""
-WITH source_volume_table AS (
-    SELECT DISTINCT
-        op.*, 
-        ti.decimals AS source_decimal,
-        cal.id AS source_id,
-        cal.chain AS source_chain,
-        cmd.current_price::FLOAT AS source_price,
-        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
-    FROM order_placed op
-    INNER JOIN match_executed me
-        ON op.order_uuid = me.order_uuid
-    INNER JOIN token_info ti
-        ON op.source_asset = ti.address
-    INNER JOIN coingecko_assets_list cal
-        ON op.source_asset = cal.address
-    INNER JOIN coingecko_market_data cmd 
-        ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date_2}'
-),
-dest_volume_table AS (
-    SELECT DISTINCT
-        op.*, 
-        ti.decimals AS dest_decimal,
-        cal.id AS dest_id,
-        cal.chain AS dest_chain,
-        cmd.current_price::FLOAT AS dest_price,
-        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
-    FROM order_placed op
-    INNER JOIN match_executed me
-        ON op.order_uuid = me.order_uuid
-    INNER JOIN token_info ti
-        ON op.dest_asset = ti.address
-    INNER JOIN coingecko_assets_list cal
-        ON op.dest_asset = cal.address
-    INNER JOIN coingecko_market_data cmd 
-        ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date_2}'
-),
-overall_volume_table_2 AS (
-    SELECT DISTINCT
-        svt.*,
-        dvt.dest_id AS dest_id,
-        dvt.dest_chain AS dest_chain,
-        dvt.dest_decimal AS dest_decimal,
-        dvt.dest_price AS dest_price,
-        dvt.dest_volume AS dest_volume,
-        (dvt.dest_volume + svt.source_volume) AS total_volume
-    FROM source_volume_table svt
-    INNER JOIN dest_volume_table dvt
-        ON svt.order_uuid = dvt.order_uuid
-),
-consolidated_volumes AS (
-    SELECT
-        id,
-        SUM(volume) AS total_volume
-    FROM (
+def asset_fetch(sd)
+    asset_query = f"""
+    WITH source_volume_table AS (
+        SELECT DISTINCT
+            op.*, 
+            ti.decimals AS source_decimal,
+            cal.id AS source_id,
+            cal.chain AS source_chain,
+            cmd.current_price::FLOAT AS source_price,
+            (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.source_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.source_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{sd}'
+    ),
+    dest_volume_table AS (
+        SELECT DISTINCT
+            op.*, 
+            ti.decimals AS dest_decimal,
+            cal.id AS dest_id,
+            cal.chain AS dest_chain,
+            cmd.current_price::FLOAT AS dest_price,
+            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.dest_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.dest_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{sd}'
+    ),
+    overall_volume_table_2 AS (
+        SELECT DISTINCT
+            svt.*,
+            dvt.dest_id AS dest_id,
+            dvt.dest_chain AS dest_chain,
+            dvt.dest_decimal AS dest_decimal,
+            dvt.dest_price AS dest_price,
+            dvt.dest_volume AS dest_volume,
+            (dvt.dest_volume + svt.source_volume) AS total_volume
+        FROM source_volume_table svt
+        INNER JOIN dest_volume_table dvt
+            ON svt.order_uuid = dvt.order_uuid
+    ),
+    consolidated_volumes AS (
         SELECT
-            source_id AS id,
-            SUM(source_volume) AS volume
-        FROM overall_volume_table_2
-        GROUP BY source_id
-        UNION ALL
-        SELECT
-            dest_id AS id,
-            SUM(dest_volume) AS volume
-        FROM overall_volume_table_2
-        GROUP BY dest_id
-    ) combined
-    GROUP BY id
-)
-SELECT id
-FROM consolidated_volumes
-ORDER BY total_volume DESC
-"""
+            id,
+            SUM(volume) AS total_volume
+        FROM (
+            SELECT
+                source_id AS id,
+                SUM(source_volume) AS volume
+            FROM overall_volume_table_2
+            GROUP BY source_id
+            UNION ALL
+            SELECT
+                dest_id AS id,
+                SUM(dest_volume) AS volume
+            FROM overall_volume_table_2
+            GROUP BY dest_id
+        ) combined
+        GROUP BY id
+    )
+    SELECT id
+    FROM consolidated_volumes
+    ORDER BY total_volume DESC
+    """
 
-asset_list = execute_sql(asset_query)
-asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
+    asset_list = execute_sql(asset_query)
+    asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
+    return(asset_list)
+
+asset_list = asset_fetch(start_date_2)
 
 # Function to execute query and retrieve data
 @st.cache_data
@@ -1413,6 +1417,8 @@ def get_weekly_volume_vs_date(asset_id):
     return pd.json_normalize(execute_sql(query)['result'])
 
 
+asset_list = asset_list[:5]
+st.write(asset_list)
 asset_list = ['Total'] + asset_list
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
