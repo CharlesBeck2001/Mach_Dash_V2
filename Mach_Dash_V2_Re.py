@@ -2545,6 +2545,7 @@ if 'df_trade_address' not in st.session_state:
     st.session_state.page_trade = 0
     st.session_state.page_volume = 0
 
+@st.cache_data
 def sankey_data(sd):
     sql_query = f"""
     WITH source_volume_table AS(
@@ -2789,7 +2790,8 @@ else:
     start_date_6 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
-if 1 == 1:
+@st.cache_data
+def fill_time_gather(sd):
 
     # Supabase credentials
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
@@ -2808,7 +2810,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2840,7 +2842,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.source_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2871,7 +2873,7 @@ if 1 == 1:
           ON op.order_uuid = me.order_uuid
         INNER JOIN coingecko_assets_list cal
           ON op.dest_asset = cal.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, chain, time_order_made, fill_time
@@ -2905,7 +2907,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, time_order_made, fill_time
@@ -2942,7 +2944,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
@@ -2973,7 +2975,7 @@ if 1 == 1:
           ON op.source_asset = cal.address
         INNER JOIN coingecko_assets_list cal2
           ON op.dest_asset = cal2.address
-        WHERE op.block_timestamp >= '{start_date_6}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     fill_table AS (
       SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
@@ -3033,11 +3035,27 @@ if 1 == 1:
     # Sorting the median fill times in descending order for better visualization
     df_fill_time_chain = df_fill_time_chain.sort_values(by='median_fill_time', ascending=False)
 
+    return {
+            "df_fill_time_date": df_fill_time_date,
+            "df_fill_time_s_chain": df_fill_time_s_chain,
+            "df_fill_time_d_chain": df_fill_time_d_chain,
+            "df_fill_time_chain": df_fill_time_chain,
+            "df_fill_time_highest": df_fill_time_highest,
+            "df_fill_time_lowest": df_fill_time_lowest,
+        }
+
 #    st.set_page_config(layout="wide")
 
+def fill_time_builds(load):
     # Create two columns to place the charts next to each other
     col1, col2, col3, col4 = st.columns([4, 4, 2, 2])
 
+    df_fill_time_date = load['df_fill_time_date']
+    df_fill_time_s_chain = load['df_fill_time_s_chain']
+    df_fill_time_d_chain = load['df_fill_time_d_chain']
+    df_fill_time_chain = load['df_fill_time_chain']
+    df_fill_time_highest = load['df_fill_time_highest']
+    df_fill_time_lowest = load['df_fill_time_lowest']
     # First chart (Chain Pair vs Median Fill Time)
     with col1:
         st.subheader('Median Fill Time by Chain Pair')
@@ -3108,44 +3126,64 @@ if 1 == 1:
         st.dataframe(df_fill_time_d_chain_sorted_2)
         
 
-# Centering the dataframe using columns
-col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
+    # Centering the dataframe using columns
+    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
+    
+    with col2:  # This column will be centered
+        st.subheader("Orders with the Ten Lowest Fill Times")
+    
+        df_fill_time_lowest_reform = df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
+        df_fill_time_lowest_reform = df_fill_time_lowest_reform.rename(columns={
+            'order_uuid': 'Order ID',
+            'source_chain': 'Source Chain',
+            'dest_chain': 'Destination Chain',
+            'source_address': 'Source Address',
+            'dest_address': 'Destination Address',
+            'time_order_made': 'Time',
+            'fill_time': 'Fill Time'
+        })
+        df_fill_time_lowest_reform.index = df_fill_time_lowest_reform.index + 1
+        #st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+        st.dataframe(df_fill_time_lowest_reform)   
+    
+    # Centering the dataframe using columns
+    col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
+    
+    with col2:  # This column will be centered
+        st.subheader("Orders with the Ten Highest Fill Times")
+        df_fill_time_highest_reform = df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
+        df_fill_time_highest_reform = df_fill_time_highest_reform.rename(columns={
+            'order_uuid': 'Order ID',
+            'source_chain': 'Source Chain',
+            'dest_chain': 'Destination Chain',
+            'source_address': 'Source Address',
+            'dest_address': 'Destination Address',
+            'time_order_made': 'Time',
+            'fill_time': 'Fill Time'
+        })
+        #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
+        df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
+        st.dataframe(df_fill_time_highest_reform)   
 
-with col2:  # This column will be centered
-    st.subheader("Orders with the Ten Lowest Fill Times")
+if "preloaded_6" not in st.session_state:
+    preloaded_6 = {}
+    for i in day_list:
+        date = today - timedelta(days=i)
+        date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    
+        data = fill_time_gather(date)
+        preloaded_6[i] = data
+    
+    date = time_point['oldest_time'][0]
+    data = fill_time_gather(date)
+    preloaded_6[0] = data
 
-    df_fill_time_lowest_reform = df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
-    df_fill_time_lowest_reform = df_fill_time_lowest_reform.rename(columns={
-        'order_uuid': 'Order ID',
-        'source_chain': 'Source Chain',
-        'dest_chain': 'Destination Chain',
-        'source_address': 'Source Address',
-        'dest_address': 'Destination Address',
-        'time_order_made': 'Time',
-        'fill_time': 'Fill Time'
-    })
-    df_fill_time_lowest_reform.index = df_fill_time_lowest_reform.index + 1
-    #st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-    st.dataframe(df_fill_time_lowest_reform)   
+    st.session_state["preloaded_6"] = preloaded_6
 
-# Centering the dataframe using columns
-col1, col2, col3 = st.columns([0.5, 7, 0.5])  # Use a ratio of 1:2:1 to center the dataframe
-
-with col2:  # This column will be centered
-    st.subheader("Orders with the Ten Highest Fill Times")
-    df_fill_time_highest_reform = df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']]
-    df_fill_time_highest_reform = df_fill_time_highest_reform.rename(columns={
-        'order_uuid': 'Order ID',
-        'source_chain': 'Source Chain',
-        'dest_chain': 'Destination Chain',
-        'source_address': 'Source Address',
-        'dest_address': 'Destination Address',
-        'time_order_made': 'Time',
-        'fill_time': 'Fill Time'
-    })
-    #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-    df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
-    st.dataframe(df_fill_time_highest_reform)   
+if time_ranges[selected_range_6] is not None:
+    vol_hist_and_pie(st.session_state["preloaded_6"][time_ranges[selected_range_6]])
+else:
+    vol_hist_and_pie(st.session_state["preloaded_6"][0])
 
 
 asset_query = """
@@ -3222,8 +3260,8 @@ FROM consolidated_volumes
 ORDER BY total_volume DESC
 """
 
-asset_list = execute_sql(asset_query)
-asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
+#asset_list = execute_sql(asset_query)
+#asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
 
 # Function to execute query and retrieve data
 @st.cache_data
