@@ -924,13 +924,6 @@ if 1==1:
             unsafe_allow_html=True,
         )
 
-
-for i in day_list:
-    date = today - timedelta(days=i)
-    stats_box_maker(date)
-
-stats_box_maker(time_point['oldest_time'][0])
-    
 stats_box_maker(start_date)
 
 st.title("Volume Analysis")
