@@ -952,9 +952,9 @@ preloaded[0] = data
     
 
 if time_ranges[selected_range] is not None:
-    load_metrics[preloaded[time_ranges[selected_range]]]
+    load_metrics(preloaded[time_ranges[selected_range]])
 else:
-    load_metrics[preloaded[0]]
+    load_metrics(preloaded[0])
     
 
 st.title("Volume Analysis")
