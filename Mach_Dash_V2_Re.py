@@ -924,7 +924,7 @@ if 1==1:
             unsafe_allow_html=True,
         )
 
-stats_box_maker(start_date)
+stats_box_maker(st.session_state["start_date"])
 
 st.title("Volume Analysis")
 
