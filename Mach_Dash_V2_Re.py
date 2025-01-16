@@ -1452,7 +1452,7 @@ with col2:
     # Process individual assets
     for asset in selected_assets:
             # Fetch data for the selected assets
-            data = get_volume_vs_date(asset)
+            data = get_volume_vs_date(asset, start_date_2)
 
             if data.empty:
                 st.warning(f"No data available for {asset}!")
@@ -1531,7 +1531,7 @@ with col1:
     for asset in selected_assets:
         if asset != "Total":
             # Fetch data for the selected assets
-            data = get_weekly_volume_vs_date(asset)
+            data = get_weekly_volume_vs_date(asset, start_date_2)
 
             if data.empty:
                 st.warning(f"No data available for {asset}!")
@@ -1541,7 +1541,7 @@ with col1:
 
         else:
 
-            data = get_weekly_volume_vs_date('Total')
+            data = get_weekly_volume_vs_date('Total', start_date_2)
 
             if data.empty:
                 st.warning(f"No data available for Total!")
