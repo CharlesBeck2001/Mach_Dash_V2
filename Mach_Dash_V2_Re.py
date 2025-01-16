@@ -1541,7 +1541,7 @@ with col1:
 
         else:
 
-            data = data = st.session_state["preloaded_2"]['Total Daily Value']
+            data = data = st.session_state["preloaded_2"]['Total Weekly Average']
             data = data[pd.to_datetime(data['day']) > pd.to_datetime(start_date_2)]
 
             if data.empty:
