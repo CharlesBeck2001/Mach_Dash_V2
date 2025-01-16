@@ -1437,7 +1437,8 @@ selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list
 all_assets_data = pd.DataFrame()
 
 
-
+st.write(start_date_2)
+st.write(st.session_state["preloaded_2"]['Total Daily Value']['day'])
 
 col1, col2 = st.columns(2)
 with col2:
@@ -1474,7 +1475,6 @@ with col2:
     # Calculate cumulative sum for each asset
     cumulative_data = pivot_data.cumsum()
 
-    st.write(cumulative_data)
     # Plot the cumulative data using st.line_chart
     st.line_chart(cumulative_data, use_container_width=True)
 
