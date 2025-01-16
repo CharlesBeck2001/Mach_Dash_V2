@@ -137,16 +137,6 @@ def update_start_date(selected_range):
     else:
         st.session_state["start_date"] = time_point['oldest_time'][0]
 
-# Create the selectbox and capture the selected range
-selected_range = st.selectbox(
-    "Select a time range:",
-    list(time_ranges.keys()),
-    index=0,  # Default to "All Time"
-    key="range_selector",
-)
-
-# Update start_date when the selection changes
-update_start_date(selected_range)
 
 @st.cache_data
 def execute_sql(query):
@@ -949,8 +939,17 @@ for i in day_list:
 date = time_point['oldest_time'][0]
 data = stats_box_maker(date)
 preloaded[0] = data
-    
 
+
+selected_range = st.selectbox(
+    "Select a time range:",
+    list(time_ranges.keys()),
+    index=0,  # Default to "All Time"
+    key="range_selector",
+)
+
+# Update start_date when the selection changes
+update_start_date(selected_range)
 if time_ranges[selected_range] is not None:
     load_metrics(preloaded[time_ranges[selected_range]])
 else:
