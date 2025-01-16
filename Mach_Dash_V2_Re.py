@@ -923,7 +923,8 @@ if 1==1:
         )
 
 
-st.write(time_ranges)
+for i in time_ranges:
+    print(i)
 
 #if time_ranges[st.session_state["selected_range"]] is not None:
 #        start_date = today - timedelta(days=time_ranges[st.session_state["selected_range"]])
