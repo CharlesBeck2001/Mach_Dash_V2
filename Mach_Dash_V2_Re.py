@@ -2096,7 +2096,7 @@ if "preloaded_3" not in st.session_state:
 
     st.session_state["preloaded_3"] = preloaded_3
 
-if time_ranges[selected_range_3] not None:
+if time_ranges[selected_range_3] is not None:
     vol_hist_and_pie(st.session_state["preloaded_3"][time_ranges[selected_range_3]])
 else:
     vol_hist_and_pie(st.session_state["preloaded_3"][0])
