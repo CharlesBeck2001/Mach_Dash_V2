@@ -1450,7 +1450,7 @@ with col2:
     for asset in selected_assets:
             # Fetch data for the selected assets
             data = st.session_state["preloaded_2"][asset + ' Daily Value']
-            data = data[data['day'] > start_date_2]
+            data = data[pd.to_datetime(data['day']) > pd.to_datetime(start_date_2)]
 
             if data.empty:
                 st.warning(f"No data available for {asset}!")
