@@ -1617,7 +1617,9 @@ def handle_page_change(page_key, direction, total_pages):
     elif direction == 'previous':
         st.session_state[page_key] -= 1
     st.rerun()
-if 1==1:
+
+@st.cache_data
+def histogram_data(sd):
     # Supabase credentials
     supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
     supabase_key = st.secrets["supabase_key"]
@@ -1639,7 +1641,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1658,7 +1660,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1705,7 +1707,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1724,7 +1726,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1771,7 +1773,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.source_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 dest_volume_table AS(
 SELECT DISTINCT
@@ -1790,7 +1792,7 @@ INNER JOIN coingecko_assets_list cal
   ON op.dest_asset = cal.address
 INNER JOIN coingecko_market_data cmd 
   ON cal.id = cmd.id
-WHERE op.block_timestamp >= '{start_date_3}'
+WHERE op.block_timestamp >= '{sd}'
 ),
 overall_volume_table_2 AS(
 SELECT DISTINCT
@@ -1920,6 +1922,28 @@ INNER JOIN dest_volume_table dvt
     #)
     total_assets = df_total_chain_volume["asset"].unique()
 
+    return {
+            "df_source_chain_volume": df_source_chain_volume,
+            "source_chains": source_chains,
+            "source_ids": source_ids,
+            "df_dest_chain_volume": df_dest_chain_volume,
+            "dest_chains": dest_chains,
+            "dest_ids": dest_ids,
+            "df_total_chain_volume": df_total_chain_volume,
+            "total_chains": total_chains,
+            "total_assets": total_assets,
+        }
+
+def vol_hist_and_pie(load):
+    df_source_chain_volume = load['df_source_chain_volume']
+    source_chains = load['source_chains']
+    source_ids = load['source_ids']
+    df_dest_chain_volume = load['df_dest_chain_volume']
+    dest_chains = load['dest_chains']
+    dest_ids = load['dest_ids']
+    df_total_chain_volume = load['df_total_chain_volume']
+    total_chains = load['total_chains']
+    total_assets = load['total_assets']
     
     with st.container():
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -2056,6 +2080,26 @@ INNER JOIN dest_volume_table dvt
     
     st.subheader("Volume by Chain")
     st.altair_chart(pie_chain, use_container_width=True)
+
+if "preloaded_3" not in st.session_state:
+    preloaded_3 = {}
+    for i in day_list:
+        date = today - timedelta(days=i)
+        date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    
+        data = histogram_data(date)
+        preloaded_3[i] = data
+    
+    date = time_point['oldest_time'][0]
+    data = histogram_data((date)
+    preloaded_3[0] = data
+
+    st.session_state["preloaded_3"] = preloaded_3
+
+if time_ranges[selected_range_3] not None:
+    vol_hist_and_pie(st.session_state["preloaded_3"][time_ranges[selected_range_3]])
+else:
+    vol_hist_and_pie(st.session_state["preloaded_3"][0])
 
 st.title("User Analysis")
 time_ranges_4 = {
