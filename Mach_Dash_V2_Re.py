@@ -180,7 +180,6 @@ def execute_sql(query):
 #if start_date != st.session_state['start_date']:
 if 1==1:
 
-    @st.cache_data
     def stats_box_maker(sd):
  # Supabase credentials
         supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
@@ -884,31 +883,49 @@ if 1==1:
         # Convert 'day' column back to the original string format after sorting
         dfs["daily_volume"]['day'] = dfs["daily_volume"]['day'].dt.strftime('%B %d, %Y')
         dfs["weekly_volume"]["week_starting"] = dfs["weekly_volume"]["week_starting"].dt.strftime('%B %d, %Y')
-        
-        # Define the layout
-        col1, col2, col3, col4, col5 = st.columns(5)
-    
+
         total_volume = float(dfs["weekly_volume"]["total_weekly_volume"].sum())
+        total_users = len(df_total_users)
 
         
-        # Box 1
-        with col1:
-            st.metric(label="Total Volume", value=f"${total_volume:,.2f}")
-            #st.line_chart(data["A"])
-        # Box 2
-        with col2:
-            st.metric(label="Total  Users", value=len(df_total_users))
-            #st.bar_chart(data["B"])
+        return {
+            "total_volume": total_volume,
+            "total_users": total_users,
+            "trade_count": trade_count,
+            "average_trades": average_trades,
+            "perc_above": perc_above,
+        }
+
+    @st.cache_resource
+    def preload_metrics(dl):
+        # Define the layout
+        for i in dl:
             
-        with col3:
-            st.metric(label="Total Trades", value=f"{trade_count:,}")
-            total_trades = trade_count
+            date = today - timedelta(days=i)
+            date = date.strftime('%Y-%m-%dT%H:%M:%S')
+
+            data = stats_box_maker(date)
         
-        with col4:
-            st.metric(label="Average Trades Per User", value=average_trades)
-        
-        with col5:
-            st.metric(label="Percent of Users With More Than 1 Trade",value=perc_above)
+            col1, col2, col3, col4, col5 = st.columns(5)
+            
+            # Box 1
+            with col1:
+                st.metric(label="Total Volume", value=f"${data['total_volume']:,.2f}")
+                #st.line_chart(data["A"])
+            # Box 2
+            with col2:
+                st.metric(label="Total  Users", value=data['total_users'])
+                #st.bar_chart(data["B"])
+                
+            with col3:
+                st.metric(label="Total Trades", value=f"{data['trade_count']:,}")
+                total_trades = trade_count
+            
+            with col4:
+                st.metric(label="Average Trades Per User", value=data['average_trades'])
+            
+            with col5:
+                st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
         # Additional styling for more customization (optional)
         st.markdown(
             """
@@ -923,6 +940,8 @@ if 1==1:
             """,
             unsafe_allow_html=True,
         )
+        
+st.success("Diagrams preloaded for all time periods!")
 
 stats_box_maker(st.session_state["start_date"])
 
