@@ -69,6 +69,8 @@ time_ranges = {
     "Last 6 Months": 180
 }
 
+day_list = [7,30,90,180]
+
 # Add custom CSS to adjust width
 st.markdown(
     """
@@ -923,17 +925,13 @@ if 1==1:
         )
 
 
-for i in time_ranges:
-    print(i)
+for i in day_list:
+    date = today - timedelta(days=i)
+    stats_box_maker(date)
 
-#if time_ranges[st.session_state["selected_range"]] is not None:
-#        start_date = today - timedelta(days=time_ranges[st.session_state["selected_range"]])
-#        st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
-#else:
-        # If "All Time", set it to a specific point (replace with your own logic)
-#        st.session_state["start_date"] = time_point['oldest_time'][0]
-    #with stats_placeholder.container():
-stats_box_maker(st.session_state["start_date"])
+stats_box_maker(time_point['oldest_time'][0])
+    
+stats_box_maker(start_date)
 
 st.title("Volume Analysis")
 
