@@ -922,6 +922,15 @@ if 1==1:
             unsafe_allow_html=True,
         )
 
+
+st.write(time_ranges)
+
+#if time_ranges[st.session_state["selected_range"]] is not None:
+#        start_date = today - timedelta(days=time_ranges[st.session_state["selected_range"]])
+#        st.session_state["start_date"] = start_date.strftime('%Y-%m-%dT%H:%M:%S')
+#else:
+        # If "All Time", set it to a specific point (replace with your own logic)
+#        st.session_state["start_date"] = time_point['oldest_time'][0]
     #with stats_placeholder.container():
 stats_box_maker(st.session_state["start_date"])
 
