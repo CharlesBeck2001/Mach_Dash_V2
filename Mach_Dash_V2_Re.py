@@ -174,8 +174,8 @@ if 1==1:
     def stats_box_maker(sd):
  # Supabase credentials
         supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
-        supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6a2VmdGR6Z3NldWdpanBsaHNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjcxMzk3NCwiZXhwIjoyMDQ4Mjg5OTc0fQ.Og46ddAeoybqUavWBAUbUoj8HJiZrfAQZi-6gRP46i4"
-    
+        supabase_key = st.secrets["supabase_key"]
+        
         sql_query1 = f"""  
         SELECT op.order_uuid
         FROM order_placed op
@@ -2756,12 +2756,14 @@ if "preloaded_5" not in st.session_state:
 if time_ranges[selected_range_5] is not None:
     
     st.subheader("Asset Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Assets")
     asset_chart = create_sankey_chart(
         st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_asset_data'], "source_id", "dest_id", "total_source_volume"
     )
     st.plotly_chart(asset_chart)
     
     st.subheader("Chain Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Chains")
     chain_chart = create_sankey_chart(
         st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
@@ -2770,11 +2772,12 @@ if time_ranges[selected_range_5] is not None:
 else:
     
     st.subheader("Asset Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Assets")
     asset_chart = create_sankey_chart(
         st.session_state["preloaded_5"][0]['top_asset_data'], "source_id", "dest_id", "total_source_volume"
     )
     st.plotly_chart(asset_chart)
-    
+    st.write("Flow Chart for the Top 10 Flows Between Chains")
     st.subheader("Chain Flow Chart")
     chain_chart = create_sankey_chart(
         st.session_state["preloaded_5"][0]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
