@@ -2365,6 +2365,8 @@ def user_analysis_data(sd):
     df_trade_address_2 = pd.json_normalize(df_trade_address_2['result'])
     df_volume_address_2 = pd.json_normalize(df_volume_address_2['result'])
 
+    df_trade_address_2.index = df_trade_address_2.index+1
+    df_volume_address_2.index = df_volume_address_2.index+1
     return {
                 "df_trade_rank_1": df_trade_rank_1,
                 "df_volume_rank_1": df_volume_rank_1,
@@ -2449,7 +2451,6 @@ def user_analysis_displays(load):
     
         # Add index starting at 1 for display
         #df_paginated_trade.index = df_paginated_trade.index + 1
-        df_trade_address.index = df_trade_address.index+1
         # Display the DataFrame
         st.write(renamed_df_trade)
     
@@ -2486,7 +2487,6 @@ def user_analysis_displays(load):
     
         # Add index starting at 1 for display
         #df_paginated_volume.index = df_paginated_volume.index + 1
-        df_volume_address.index = df_volume_address.index+1
         # Display the DataFrame
         st.write(renamed_df_volume)
 
