@@ -2359,8 +2359,8 @@ def user_analysis_data(sd):
     df_trade_rank_1['percentage_of_total_trades'] = df_trade_rank_1['percentage_of_total_trades'].round(1)
     df_volume_rank_1['percentage_of_total_volume'] = df_volume_rank_1['percentage_of_total_volume'].round(1)
 
-    df_trade_address_2 = execute_sql(trade_add_query_2)
-    df_volume_address_2 = execute_sql(volume_add_query_2)
+    df_trade_address_2 = execute_sql(trade_add_query)
+    df_volume_address_2 = execute_sql(volume_add_query)
     
     df_trade_address_2 = pd.json_normalize(df_trade_address_2['result'])
     df_volume_address_2 = pd.json_normalize(df_volume_address_2['result'])
