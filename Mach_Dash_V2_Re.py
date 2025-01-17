@@ -2777,8 +2777,9 @@ else:
         st.session_state["preloaded_5"][0]['top_asset_data'], "source_id", "dest_id", "total_source_volume"
     )
     st.plotly_chart(asset_chart)
-    st.write("Flow Chart for the Top 10 Flows Between Chains")
+    
     st.subheader("Chain Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Chains")
     chain_chart = create_sankey_chart(
         st.session_state["preloaded_5"][0]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
