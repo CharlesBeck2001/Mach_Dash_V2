@@ -3095,7 +3095,6 @@ def fill_time_gather(sd):
     })
     #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
     fill_time_highest_reform_index = df_fill_time_highest_reform.index
-    sti.write(fill_time_highest_reform_index[0])
     if fill_time_highest_reform_index[0] == 0:
         df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
     
