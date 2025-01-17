@@ -2555,13 +2555,6 @@ else:
     #st.write(start_date)
 
 
-# Initialize session state if not already present
-if 'df_trade_address' not in st.session_state:
-    st.session_state.df_trade_address = df_trade_address
-    st.session_state.df_volume_address = df_volume_address
-    st.session_state.page_trade = 0
-    st.session_state.page_volume = 0
-
 @st.cache_data
 def sankey_data(sd):
     sql_query = f"""
