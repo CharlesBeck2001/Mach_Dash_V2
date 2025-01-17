@@ -2366,8 +2366,8 @@ def user_analysis_data(sd):
     df_volume_address_2 = pd.json_normalize(df_volume_address_2['result'])
 
     return {
-                "df_trade_address_1": df_trade_address_1,
-                "df_volume_address_1": df_volume_address_1,
+                "df_trade_rank_1": df_trade_rank_1,
+                "df_volume_rank_1": df_volume_rank_1,
                 "df_trade_address_2": df_trade_address_2,
                 "df_volume_address_2": df_volume_address_2,
            }
@@ -2384,8 +2384,8 @@ def user_analysis_data(sd):
 
 def user_analysis_displays(load):    
     
-    df_trade_address = load['df_trade_address_1']
-    df_volume_address = load['df_volume_address_1']
+    df_trade_rank = load['df_trade_rank_1']
+    df_volume_rank = load['df_volume_rank_1']
     # Create the bar chart
     fig = px.bar(
         df_trade_rank,
