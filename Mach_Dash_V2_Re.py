@@ -3072,7 +3072,10 @@ def fill_time_builds(load):
         # Sort df_fill_time_s_chain by median_fill_time in descending order
         df_fill_time_s_chain_sorted = df_fill_time_s_chain.sort_values(by='median_fill_time', ascending=False)
         df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.reset_index(drop=True)
-        df_fill_time_s_chain_sorted.index = df_fill_time_s_chain_sorted.index+1
+        s_chain_index = df_fill_time_s_chain_sorted.index
+        
+        if s_chain_index[0] == 0:
+            df_fill_time_s_chain_sorted.index = df_fill_time_s_chain_sorted.index+1
         # Display the sorted table
         #df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.rename(
         #    columns={
@@ -3096,7 +3099,10 @@ def fill_time_builds(load):
         # Sort df_fill_time_s_chain by median_fill_time in descending order
         df_fill_time_d_chain_sorted = df_fill_time_d_chain.sort_values(by='median_fill_time', ascending=False)
         df_fill_time_d_chain_sorted = df_fill_time_d_chain_sorted.reset_index(drop=True)
-        df_fill_time_d_chain_sorted.index = df_fill_time_d_chain_sorted.index+1
+        d_chain_index = df_fill_time_d_chain_sorted.index
+        
+        if d_chain_index[0] == 0:
+            df_fill_time_d_chain_sorted.index = df_fill_time_d_chain_sorted.index+1
         # Display the sorted table
         #df_fill_time_s_chain_sorted = df_fill_time_s_chain_sorted.rename(
         #    columns={
@@ -3132,7 +3138,10 @@ def fill_time_builds(load):
             'time_order_made': 'Time',
             'fill_time': 'Fill Time'
         })
-        df_fill_time_lowest_reform.index = df_fill_time_lowest_reform.index + 1
+        fill_time_lowest_reform_index = df_fill_time_lowest_reform.index 
+        
+        if fill_time_lowest_reform_index[0] == 0:
+            df_fill_time_lowest_reform.index = df_fill_time_lowest_reform.index + 1
         #st.dataframe(df_fill_time_lowest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
         st.dataframe(df_fill_time_lowest_reform)   
     
@@ -3152,7 +3161,11 @@ def fill_time_builds(load):
             'fill_time': 'Fill Time'
         })
         #st.dataframe(df_fill_time_highest[['order_uuid', 'source_chain', 'dest_chain', 'source_address', 'dest_address', 'time_order_made', 'fill_time']])
-        df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
+        fill_time_highest_reform_index = df_fill_time_highest_reform.index
+
+        if fill_time_highest_reform_index[0] == 0:
+            df_fill_time_highest_reform.index = df_fill_time_highest_reform.index + 1
+        
         st.dataframe(df_fill_time_highest_reform)   
 
     return
