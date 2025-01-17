@@ -2125,8 +2125,7 @@ else:
     start_date_4 = time_point['oldest_time'][0]  # No filter for "All Time"
     #st.write(start_date)
 
-if 1==1:
-
+def user_analysis_data(sd):
     sql_query12 = f""" 
     WITH RankedTrades AS (
     SELECT
@@ -2143,7 +2142,7 @@ if 1==1:
         FROM order_placed op
         INNER JOIN match_executed me
             ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date_4}'
+        WHERE op.block_timestamp >= '{sd}'
     ) AS all_trades
     GROUP BY address
     ),
@@ -2183,7 +2182,7 @@ if 1==1:
         ON op.source_asset = cal.address
     INNER JOIN coingecko_market_data cmd 
         ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date_4}'
+    WHERE op.block_timestamp >= '{sd}'
     ),
     dest_volume_table AS (
         SELECT DISTINCT
@@ -2205,7 +2204,7 @@ if 1==1:
             ON op.dest_asset = cal.address
         INNER JOIN coingecko_market_data cmd 
             ON cal.id = cmd.id
-        WHERE op.block_timestamp >= '{start_date_4}'
+        WHERE op.block_timestamp >= '{sd}'
     ),
     overall_volume_table_2 AS (
         SELECT DISTINCT
@@ -2252,64 +2251,126 @@ if 1==1:
     FROM cumulative_volume_table
     WHERE rank <= 300
     """
+    
+    
+    trade_add_query = f"""
+        SELECT
+            address,
+            COUNT(order_id) AS trade_count
+        FROM (
+            SELECT sender_address AS address, op.order_uuid AS order_id
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            UNION ALL
+            SELECT maker_address AS address, op.order_uuid AS order_id
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            WHERE op.block_timestamp >= '{sd}'
+        ) AS all_trades
+        GROUP BY address
+        ORDER BY trade_count DESC
+        LIMIT 200
+        """
+        
+    volume_add_query = f"""
+        WITH source_volume_table AS (
+        SELECT DISTINCT
+            op.order_uuid, 
+            op.source_quantity, 
+            op.source_asset,
+            op.sender_address,  -- Explicitly include sender_address
+            ti.decimals AS source_decimal,
+            cal.id AS source_id,
+            cal.chain AS source_chain,
+            cmd.current_price::FLOAT AS source_price,
+            (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.source_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.source_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{sd}'
+        ),
+        dest_volume_table AS (
+        SELECT DISTINCT
+            op.order_uuid, 
+            op.dest_quantity, 
+            op.dest_asset,
+            me.maker_address,  -- Explicitly include maker_address
+            ti.decimals AS dest_decimal,
+            cal.id AS dest_id,
+            cal.chain AS dest_chain,
+            cmd.current_price::FLOAT AS dest_price,
+            (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+        FROM order_placed op
+        INNER JOIN match_executed me
+            ON op.order_uuid = me.order_uuid
+        INNER JOIN token_info ti
+            ON op.dest_asset = ti.address
+        INNER JOIN coingecko_assets_list cal
+            ON op.dest_asset = cal.address
+        INNER JOIN coingecko_market_data cmd 
+            ON cal.id = cmd.id
+        WHERE op.block_timestamp >= '{sd}'
+        ),
+        overall_volume_table_2 AS (
+        SELECT DISTINCT
+            svt.order_uuid,
+            svt.sender_address,  -- Explicitly use sender_address here
+            dvt.maker_address,   -- Explicitly use maker_address here
+            svt.source_volume,
+            dvt.dest_volume,
+            (dvt.dest_volume + svt.source_volume) AS total_volume
+        FROM source_volume_table svt
+        INNER JOIN dest_volume_table dvt
+            ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            address,
+            COALESCE(SUM(total_volume), 0) AS total_user_volume
+        FROM (
+            SELECT sender_address AS address, total_volume
+            FROM overall_volume_table_2
+            UNION ALL
+            SELECT maker_address AS address, total_volume
+            FROM overall_volume_table_2
+        ) AS combined_addresses
+        GROUP BY address
+        ORDER BY total_user_volume DESC
+        LIMIT 200
+        """
+    
+    df_trade_rank_1 = execute_sql(sql_query12)
+    df_volume_rank_1 = execute_sql(sql_query13)
+    
+    df_trade_rank_1 = pd.json_normalize(df_trade_rank_1['result'])
+    df_volume_rank_1 = pd.json_normalize(df_volume_rank_1['result'])
+    
+    # Limit to the first 30 rows
+    df_trade_rank_1 = df_trade_rank_1.head(10)
+    df_volume_rank_1 = df_volume_rank_1.head(10)
 
-df_trade_rank = execute_sql(sql_query12)
-df_volume_rank = execute_sql(sql_query13)
+    df_trade_rank_1['percentage_of_total_trades'] = df_trade_rank_1['percentage_of_total_trades'].round(1)
+    df_volume_rank_1['percentage_of_total_volume'] = df_volume_rank_1['percentage_of_total_volume'].round(1)
 
-df_trade_rank = pd.json_normalize(df_trade_rank['result'])
-df_volume_rank = pd.json_normalize(df_volume_rank['result'])
+    df_trade_address_2 = execute_sql(trade_add_query_2)
+    df_volume_address_2 = execute_sql(volume_add_query_2)
+    
+    df_trade_address_2 = pd.json_normalize(df_trade_address_2['result'])
+    df_volume_address_2 = pd.json_normalize(df_volume_address_2['result'])
 
-# Limit to the first 30 rows
-df_trade_rank = df_trade_rank.head(10)
-
-# Truncate 'percentage' to one decimal place
-df_trade_rank['percentage_of_total_trades'] = df_trade_rank['percentage_of_total_trades'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_trade_rank,
-    x='n',  # Top N users
-    y='percentage_of_total_trades',  # Percentage
-    text='percentage_of_total_trades',  # Show percentage values on the bars
-    labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
-    title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-
-st.subheader("User Portion by Trade")
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
-
-# Limit to the first 30 rows
-df_volume_rank = df_volume_rank.head(10)
-# Truncate 'percentage' to one decimal place
-df_volume_rank['percentage_of_total_volume'] = df_volume_rank['percentage_of_total_volume'].round(1)
-# Create the bar chart
-fig = px.bar(
-    df_volume_rank,
-    x='top_n',  # Top N users
-    y='percentage_of_total_volume',  # Percentage
-    text='percentage_of_total_volume',  # Show percentage values on the bars
-    labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
-    title='Percentage of Total Volume Comprised of Up To the Top 10 Users In Terms of Most Trades',
-)
-
-# Customize the appearance
-fig.update_traces(marker_color='blue', textposition='outside')
-fig.update_layout(
-    template='plotly_white',
-    height=500,
-    width=800
-)
-st.subheader("User Portion by Volume")
-# Show chart in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+    return {
+                "df_trade_address_1": df_trade_address_1,
+                "df_volume_address_1": df_volume_address_1,
+                "df_trade_address_2": df_trade_address_2,
+                "df_volume_address_2": df_volume_address_2,
+           }
 
 # Add percentage columns to session state dataframes
 #df_trade_address['percentage_of_total_trades'] = (
@@ -2321,175 +2382,133 @@ st.plotly_chart(fig, use_container_width=True)
 #).round(2)
 
 
-trade_add_query = f"""
-    SELECT
-        address,
-        COUNT(order_id) AS trade_count
-    FROM (
-        SELECT sender_address AS address, op.order_uuid AS order_id
-        FROM order_placed op
-        INNER JOIN match_executed me
-            ON op.order_uuid = me.order_uuid
-        UNION ALL
-        SELECT maker_address AS address, op.order_uuid AS order_id
-        FROM order_placed op
-        INNER JOIN match_executed me
-            ON op.order_uuid = me.order_uuid
-        WHERE op.block_timestamp >= '{start_date_4}'
-    ) AS all_trades
-    GROUP BY address
-    ORDER BY trade_count DESC
-    LIMIT 200
-    """
+def user_analysis_displays(load):    
     
-volume_add_query = f"""
-    WITH source_volume_table AS (
-    SELECT DISTINCT
-        op.order_uuid, 
-        op.source_quantity, 
-        op.source_asset,
-        op.sender_address,  -- Explicitly include sender_address
-        ti.decimals AS source_decimal,
-        cal.id AS source_id,
-        cal.chain AS source_chain,
-        cmd.current_price::FLOAT AS source_price,
-        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
-    FROM order_placed op
-    INNER JOIN match_executed me
-        ON op.order_uuid = me.order_uuid
-    INNER JOIN token_info ti
-        ON op.source_asset = ti.address
-    INNER JOIN coingecko_assets_list cal
-        ON op.source_asset = cal.address
-    INNER JOIN coingecko_market_data cmd 
-        ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date_4}'
-    ),
-    dest_volume_table AS (
-    SELECT DISTINCT
-        op.order_uuid, 
-        op.dest_quantity, 
-        op.dest_asset,
-        me.maker_address,  -- Explicitly include maker_address
-        ti.decimals AS dest_decimal,
-        cal.id AS dest_id,
-        cal.chain AS dest_chain,
-        cmd.current_price::FLOAT AS dest_price,
-        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
-    FROM order_placed op
-    INNER JOIN match_executed me
-        ON op.order_uuid = me.order_uuid
-    INNER JOIN token_info ti
-        ON op.dest_asset = ti.address
-    INNER JOIN coingecko_assets_list cal
-        ON op.dest_asset = cal.address
-    INNER JOIN coingecko_market_data cmd 
-        ON cal.id = cmd.id
-    WHERE op.block_timestamp >= '{start_date_4}'
-    ),
-    overall_volume_table_2 AS (
-    SELECT DISTINCT
-        svt.order_uuid,
-        svt.sender_address,  -- Explicitly use sender_address here
-        dvt.maker_address,   -- Explicitly use maker_address here
-        svt.source_volume,
-        dvt.dest_volume,
-        (dvt.dest_volume + svt.source_volume) AS total_volume
-    FROM source_volume_table svt
-    INNER JOIN dest_volume_table dvt
-        ON svt.order_uuid = dvt.order_uuid
+    df_trade_address = load['df_trade_address_1']
+    df_volume_address = load['df_volume_address_1']
+    # Create the bar chart
+    fig = px.bar(
+        df_trade_rank,
+        x='n',  # Top N users
+        y='percentage_of_total_trades',  # Percentage
+        text='percentage_of_total_trades',  # Show percentage values on the bars
+        labels={'n': 'Top N Users', 'percentage_of_total_trades': 'Percentage of Total Trades'},
+        title='Percentage of Total Trades Comprised of Up To the Top 10 Users In Terms of Most Trades',
     )
-    SELECT 
-        address,
-        COALESCE(SUM(total_volume), 0) AS total_user_volume
-    FROM (
-        SELECT sender_address AS address, total_volume
-        FROM overall_volume_table_2
-        UNION ALL
-        SELECT maker_address AS address, total_volume
-        FROM overall_volume_table_2
-    ) AS combined_addresses
-    GROUP BY address
-    ORDER BY total_user_volume DESC
-    LIMIT 200
-    """
+    
+    # Customize the appearance
+    fig.update_traces(marker_color='blue', textposition='outside')
+    fig.update_layout(
+        template='plotly_white',
+        height=500,
+        width=800
+    )
+    
+    st.subheader("User Portion by Trade")
+    # Show chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Create the bar chart
+    fig = px.bar(
+        df_volume_rank,
+        x='top_n',  # Top N users
+        y='percentage_of_total_volume',  # Percentage
+        text='percentage_of_total_volume',  # Show percentage values on the bars
+        labels={'top_n': 'Top N Users', 'percentage_of_total_volume': 'Percentage of Total Trades'},
+        title='Percentage of Total Volume Comprised of Up To the Top 10 Users In Terms of Most Trades',
+    )
+    
+    # Customize the appearance
+    fig.update_traces(marker_color='blue', textposition='outside')
+    fig.update_layout(
+        template='plotly_white',
+        height=500,
+        width=800
+    )
+    st.subheader("User Portion by Volume")
+    # Show chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
-df_trade_address = execute_sql(trade_add_query)
-df_volume_address = execute_sql(volume_add_query)
+    df_trade_address = load['df_trade_address_2']
+    df_volume_address = load['df_volume_address_2']
+    # For 'Users With The Most Trades' section
+    col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
+    with col1:
+        st.subheader("Users With The Most Trades")
+    
+        # Rename columns for clarity
+        renamed_df_trade = df_trade_address.rename(columns={
+            'address': 'User ID',
+            'trade_count': 'Number of Trades',
+            'percentage_of_total_trades': '% of Total Trades',
+            'some_other_column': 'Other Info'
+        })
+    
+        # Get the paginated DataFrame
+        #df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
+    
+        # Add index starting at 1 for display
+        #df_paginated_trade.index = df_paginated_trade.index + 1
+        df_trade_address.index = df_trade_address.index+1
+        # Display the DataFrame
+        st.write(renamed_df_trade)
+    
+        # Calculate total pages for trade data
+        #total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
+    
+        # Use st.empty() to ensure buttons are properly placed
+        #button_col_left = st.empty()
+        #button_col_right = st.empty()
+    
+        # Add buttons for pagination
+        #if st.session_state.page_trade > 0:
+        #    if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):
+        #        handle_page_change('page_trade', 'previous', total_pages_trade)
+    
+        #if st.session_state.page_trade < total_pages_trade - 1:
+        #    if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):
+        #        handle_page_change('page_trade', 'next', total_pages_trade)
+    
+    # For 'Users With The Most Volume' section
+    with col2:
+        st.subheader("Users With The Most Volume")
+    
+        # Rename columns for clarity
+        renamed_df_volume = df_volume_address.rename(columns={
+            'address': 'User ID',
+            'total_user_volume': 'Volume',
+            'percentage_of_total_volume': '% of Total Volume',
+            'another_column': 'Some Other Data'
+        })
+    
+        # Get the paginated DataFrame
+        #df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
+    
+        # Add index starting at 1 for display
+        #df_paginated_volume.index = df_paginated_volume.index + 1
+        df_volume_address.index = df_volume_address.index+1
+        # Display the DataFrame
+        st.write(renamed_df_volume)
 
-df_trade_address = pd.json_normalize(df_trade_address['result'])
-df_volume_address = pd.json_normalize(df_volume_address['result'])
-# For 'Users With The Most Trades' section
-col1, col2 = st.columns([2, 2])  # Adjusting width to match your content layout
-with col1:
-    st.subheader("Users With The Most Trades")
+if "preloaded_4" not in st.session_state:
+    preloaded_4 = {}
+    for i in day_list:
+        date = today - timedelta(days=i)
+        date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    
+        data = user_analysis_data(date)
+        preloaded_4[i] = data
+    
+    date = time_point['oldest_time'][0]
+    data = user_analysis_data(date)
+    preloaded_4[0] = data
 
-    # Rename columns for clarity
-    renamed_df_trade = df_trade_address.rename(columns={
-        'address': 'User ID',
-        'trade_count': 'Number of Trades',
-        'percentage_of_total_trades': '% of Total Trades',
-        'some_other_column': 'Other Info'
-    })
+    st.session_state["preloaded_4"] = preloaded_4
 
-    # Get the paginated DataFrame
-    #df_paginated_trade = paginate_df(renamed_df_trade, st.session_state.page_trade)
-
-    # Add index starting at 1 for display
-    #df_paginated_trade.index = df_paginated_trade.index + 1
-    df_trade_address.index = df_trade_address.index+1
-    # Display the DataFrame
-    st.write(renamed_df_trade)
-
-    # Calculate total pages for trade data
-    #total_pages_trade = calculate_total_pages(st.session_state.df_trade_address)
-
-    # Use st.empty() to ensure buttons are properly placed
-    #button_col_left = st.empty()
-    #button_col_right = st.empty()
-
-    # Add buttons for pagination
-    #if st.session_state.page_trade > 0:
-    #    if st.button('Previous', key=f'prev_trade_{st.session_state.page_trade}'):
-    #        handle_page_change('page_trade', 'previous', total_pages_trade)
-
-    #if st.session_state.page_trade < total_pages_trade - 1:
-    #    if st.button('Next', key=f'next_trade_{st.session_state.page_trade}'):
-    #        handle_page_change('page_trade', 'next', total_pages_trade)
-
-# For 'Users With The Most Volume' section
-with col2:
-    st.subheader("Users With The Most Volume")
-
-    # Rename columns for clarity
-    renamed_df_volume = df_volume_address.rename(columns={
-        'address': 'User ID',
-        'total_user_volume': 'Volume',
-        'percentage_of_total_volume': '% of Total Volume',
-        'another_column': 'Some Other Data'
-    })
-
-    # Get the paginated DataFrame
-    #df_paginated_volume = paginate_df(renamed_df_volume, st.session_state.page_volume)
-
-    # Add index starting at 1 for display
-    #df_paginated_volume.index = df_paginated_volume.index + 1
-    df_volume_address.index = df_volume_address.index+1
-    # Display the DataFrame
-    st.write(renamed_df_volume)
-
-    # Calculate total pages for volume data
-    #total_pages_volume = calculate_total_pages(st.session_state.df_volume_address)
-
-    # Add buttons for pagination
-    #if st.session_state.page_volume > 0:
-     #   if st.button('Previous', key=f'prev_volume_{st.session_state.page_volume}'):
-      #      handle_page_change('page_volume', 'previous', total_pages_volume)
-
-    #if st.session_state.page_volume < total_pages_volume - 1:
-     #   if st.button('Next', key=f'next_volume_{st.session_state.page_volume}'):
-      #      handle_page_change('page_volume', 'next', total_pages_volume)
-
+if time_ranges[selected_range_4] is not None:
+    user_analysis_displays(st.session_state["preloaded_4"][time_ranges[selected_range_4]])
+else:
+    user_analysis_displays(st.session_state["preloaded_4"][0])
 
 # Supabase credentials
 supabase_url = "https://fzkeftdzgseugijplhsh.supabase.co"
@@ -2523,9 +2542,6 @@ time_ranges_5 = {
     "Last 3 Months": 90,
     "Last 6 Months": 180
 }
-
-# Get today's date
-today = datetime.now()
 
 selected_range_5 = st.selectbox("Select a time range for the flow charts:", list(time_ranges_5.keys()))
 
