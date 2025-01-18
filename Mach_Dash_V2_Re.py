@@ -1416,7 +1416,7 @@ def get_weekly_volume_vs_date(asset_id, sd):
     return pd.json_normalize(execute_sql(query)['result'])
 
 
-asset_list = asset_list[:10]
+asset_list = asset_list[:20]
 asset_list = ['Total'] + asset_list
 
 if "preloaded_2" not in st.session_state:
