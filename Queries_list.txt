@@ -1,0 +1,1677 @@
+--This query finds the oldest time in the dataset of trades.
+SELECT MIN(op.block_timestamp) AS oldest_time
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid;
+
+--This query builds a table of all of the trades that are successfully executed that are recorded in the dataset. The sd part of this is an input that one inserts to assert the earliest date of trades one would like to view.
+SELECT op.order_uuid
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+WHERE op.block_timestamp >= '{sd}';
+
+--This query calculates the total volume that occured in a given hour of the day.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+  TO_CHAR(
+    TO_TIMESTAMP(hour_series || ':00:00', 'HH24:MI:SS'),
+    'FMHH AM'  -- Format hour as "1 AM", "2 AM", etc.
+  ) AS hour_of_day,
+  COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume
+FROM generate_series(0, 23) AS hour_series  -- Generate hours from 0 to 23
+LEFT JOIN overall_volume_table_2 svt
+  ON EXTRACT(HOUR FROM svt.block_timestamp) = hour_series  -- Match the hour of the trade to the generated hours
+GROUP BY hour_series
+ORDER BY hour_series;
+
+--This query calculates total volume on each day in the dataset starting from date sd.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+  TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+  COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume
+FROM overall_volume_table_2 svt
+GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+ORDER BY day;
+
+
+--This query finds the total volume during each week starting on the date sd.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+  TO_CHAR(DATE_TRUNC('week', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS week_starting,
+  COALESCE(SUM(svt.total_volume), 0) AS total_weekly_volume
+FROM overall_volume_table_2 svt
+GROUP BY DATE_TRUNC('week', svt.block_timestamp)
+ORDER BY week_starting;
+
+
+--This query finds the total number of trades in each hour of the day for all the data in the dataset starting from sd.
+SELECT 
+  TO_CHAR(
+      TO_TIMESTAMP(DATE_PART('hour', op.block_timestamp) || ':00:00', 'HH24:MI:SS'),
+      'FMHH:MI AM'
+  ) AS hour_of_day,
+  COUNT(*) AS total_trades
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+WHERE op.block_timestamp >= '{sd}'
+GROUP BY DATE_PART('hour', op.block_timestamp)
+ORDER BY DATE_PART('hour', op.block_timestamp);
+
+
+--This query finds total trades during each day since date sd.
+SELECT 
+    DATE(op.block_timestamp) AS trade_date,
+    COUNT(*) AS total_trades
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+WHERE op.block_timestamp >= '{sd}'
+GROUP BY DATE(op.block_timestamp)
+ORDER BY trade_date;
+
+--Query that finds the amount of trades in a given week for all dates after sd.
+SELECT 
+    DATE_TRUNC('week', op.block_timestamp) AS week_start_date,
+    COUNT(*) AS total_trades
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+WHERE op.block_timestamp >= '{sd}'
+GROUP BY DATE_TRUNC('week', op.block_timestamp)
+ORDER BY week_start_date;
+
+
+--Query that finds the number of users in the dataset for all dates after sd.
+SELECT
+    DISTINCT address AS unique_address_count
+FROM (
+    SELECT sender_address AS address
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    UNION
+    SELECT maker_address AS address
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{sd}'
+) AS unique_addresses;
+
+
+--Query that finds the number of trades since date sd.
+SELECT COUNT(op.order_uuid)
+FROM order_placed op
+INNER JOIN match_executed me
+ON op.order_uuid = me.order_uuid
+WHERE op.block_timestamp >= '{sd}';
+
+
+--Query that finds the number of trades associated with each user.
+SELECT
+    address,
+    COUNT(order_id) AS trade_count
+FROM (
+    SELECT sender_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    UNION ALL
+    SELECT maker_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{sd}'
+) AS all_trades
+GROUP BY address
+ORDER BY trade_count DESC
+LIMIT 200;
+
+
+--Query that finds the volume associated with each user.
+WITH source_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.source_quantity, 
+    op.source_asset,
+    op.sender_address,  -- Explicitly include sender_address
+    ti.decimals AS source_decimal,
+    cal.id AS source_id,
+    cal.chain AS source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.dest_quantity, 
+    op.dest_asset,
+    me.maker_address,  -- Explicitly include maker_address
+    ti.decimals AS dest_decimal,
+    cal.id AS dest_id,
+    cal.chain AS dest_chain,
+    cmd.current_price::FLOAT AS dest_price,
+    (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.dest_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+SELECT DISTINCT
+    svt.order_uuid,
+    svt.sender_address,  -- Explicitly use sender_address here
+    dvt.maker_address,   -- Explicitly use maker_address here
+    svt.source_volume,
+    dvt.dest_volume,
+    (dvt.dest_volume + svt.source_volume) AS total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+    ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    address,
+    COALESCE(SUM(total_volume), 0) AS total_user_volume
+FROM (
+    SELECT sender_address AS address, total_volume
+    FROM overall_volume_table_2
+    UNION ALL
+    SELECT maker_address AS address, total_volume
+    FROM overall_volume_table_2
+) AS combined_addresses
+GROUP BY address
+ORDER BY total_user_volume DESC
+LIMIT 200;
+
+
+
+--Query finds finds mos significant users by trade count.
+WITH RankedTrades AS (
+SELECT
+    ROW_NUMBER() OVER (ORDER BY COUNT(order_id) DESC) AS rank,
+    address,
+    COUNT(order_id) AS trade_count
+FROM (
+    SELECT sender_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    UNION ALL
+    SELECT maker_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{sd}'
+) AS all_trades
+GROUP BY address
+),
+CumulativeTrades AS (
+SELECT
+    rank AS N,
+    SUM(trade_count) OVER (ORDER BY rank) AS cumulative_trade_count,
+    (SELECT SUM(trade_count) FROM RankedTrades) AS total_trades
+FROM RankedTrades
+WHERE rank <= 200
+)
+SELECT
+    N,
+    CAST(cumulative_trade_count * 100.0 / total_trades AS FLOAT) AS percentage_of_total_trades
+FROM CumulativeTrades
+ORDER BY N;
+
+
+--Query finds most significant users in terms of percentage of total volume.
+WITH source_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.source_quantity, 
+    op.source_asset,
+    op.sender_address,  
+    ti.decimals AS source_decimal,
+    cal.id AS source_id,
+    cal.chain AS source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.dest_quantity, 
+        op.dest_asset,
+        me.maker_address,  
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.order_uuid,
+        svt.sender_address,  
+        dvt.maker_address,   
+        svt.source_volume,
+        dvt.dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+total_volume_table AS (
+    SELECT 
+        address,
+        COALESCE(SUM(total_volume), 0) AS total_user_volume
+    FROM (
+        SELECT sender_address AS address, total_volume
+        FROM overall_volume_table_2
+        UNION ALL
+        SELECT maker_address AS address, total_volume
+        FROM overall_volume_table_2
+    ) AS combined_addresses
+    GROUP BY address
+),
+ranked_volume_table AS (
+    SELECT 
+        address,
+        total_user_volume,
+        RANK() OVER (ORDER BY total_user_volume DESC) AS rank
+    FROM total_volume_table
+),
+cumulative_volume_table AS (
+    SELECT 
+        rank,
+        SUM(total_user_volume) OVER (ORDER BY rank) AS cumulative_volume,
+        (SUM(total_user_volume) OVER (ORDER BY rank) * 100.0) / (SUM(total_user_volume) OVER ()) AS percentage_of_total_volume
+    FROM ranked_volume_table
+)
+SELECT 
+    rank AS top_n,
+    percentage_of_total_volume
+FROM cumulative_volume_table
+WHERE rank <= 300;
+
+
+--Finds the average number of trades per user.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+),
+combined_address_trades AS (
+  SELECT 
+    sender_address AS address,
+    COUNT(*) AS trades
+  FROM overall_volume_table_2
+  GROUP BY sender_address
+
+  UNION ALL
+
+  SELECT 
+    filler_address AS address,
+    COUNT(*) AS trades
+  FROM overall_volume_table_2
+  GROUP BY filler_address
+),
+user_trade_count AS (
+SELECT 
+  address,
+  CAST(SUM(trades) AS INT) AS total_trades
+FROM combined_address_trades
+GROUP BY address
+ORDER BY total_trades DESC
+)
+SELECT CAST(AVG(total_trades) AS INT) AS average_trades_per_user FROM user_trade_count;
+
+-- Query that finds portion of users with more than 1 trade.
+ WITH user_trade_counts AS (
+  SELECT
+      op.sender_address AS address,
+      COUNT(op.order_uuid) AS trade_count
+  FROM order_placed op
+  INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+  WHERE op.sender_address = me.maker_address
+  GROUP BY op.sender_address
+  )   
+  SELECT
+      CAST(
+          (COUNT(CASE WHEN trade_count > 1 THEN 1 END) * 100.0) / COUNT(*) AS INT
+      ) AS percent_users_with_more_than_one_trade
+  FROM user_trade_counts;
+
+
+-- Query that finds trade counts for each user.
+ WITH user_trade_counts AS (
+    SELECT
+        op.sender_address AS address,
+        COUNT(op.order_uuid) AS trade_count
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.sender_address = me.maker_address
+      AND op.block_timestamp >= '{sd}'
+    GROUP BY op.sender_address
+)   
+SELECT COUNT(*) FROM user_trade_counts;
+
+
+
+-- Query that gets a list of all the assets in the dataset.
+WITH source_volume_table AS (
+SELECT DISTINCT
+    op.*, 
+    ti.decimals AS source_decimal,
+    cal.id AS source_id,
+    cal.chain AS source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+consolidated_volumes AS (
+    SELECT
+        id,
+        SUM(volume) AS total_volume
+    FROM (
+        SELECT
+            source_id AS id,
+            SUM(source_volume) AS volume
+        FROM overall_volume_table_2
+        GROUP BY source_id
+        UNION ALL
+        SELECT
+            dest_id AS id,
+            SUM(dest_volume) AS volume
+        FROM overall_volume_table_2
+        GROUP BY dest_id
+    ) combined
+    GROUP BY id
+)
+SELECT id
+FROM consolidated_volumes
+ORDER BY total_volume DESC;
+
+
+--Query for a given asset and given date that finds volume vs date.
+WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+    COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+    '{asset_id}' AS asset
+FROM overall_volume_table_2 svt
+WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
+GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+ORDER BY day;
+
+
+--This query does a weekly average for a given asset starting from date sd.
+WITH source_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    TO_CHAR(DATE_TRUNC('day', svt.block_timestamp), 'FMMonth FMDD, YYYY') AS day,
+    COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
+    '{asset_id}' AS asset
+FROM overall_volume_table_2 svt
+GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+ORDER BY day;
+
+
+--This does the same thing as the last query but for all assets in the dataset.
+WITH date_series AS (
+    -- Generate a series of dates from the minimum to the maximum block timestamp
+    SELECT 
+        generate_series(
+            (SELECT MIN(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+            (SELECT MAX(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+            '1 day'::interval
+        )::date AS day
+),
+source_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+daily_volume_table AS (
+    SELECT 
+        DATE_TRUNC('day', svt.block_timestamp) AS day,
+        SUM(svt.total_volume) AS daily_volume,
+        '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
+        GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+),
+filled_daily_volume_table AS (
+    SELECT 
+        ds.day,
+        COALESCE(dv.daily_volume, 0) AS daily_volume,
+        '{asset_id}' AS asset
+    FROM date_series ds
+    LEFT JOIN daily_volume_table dv
+    ON ds.day = dv.day
+),
+weekly_averaged_volume_table AS (
+    SELECT 
+        day,
+        asset,
+        -- Calculate the 7-day centered moving average
+        AVG(daily_volume) OVER (
+            ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
+        ) AS weekly_avg_volume
+    FROM filled_daily_volume_table
+)
+SELECT 
+    TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
+    weekly_avg_volume AS total_weekly_avg_volume,
+    asset
+FROM weekly_averaged_volume_table
+WHERE day >= '{sd}'
+ORDER BY day;
+
+
+--Same as last query but for all assets in the dataset.
+WITH date_series AS (
+    -- Generate a series of dates from the minimum to the maximum block timestamp
+    SELECT 
+        generate_series(
+            (SELECT MIN(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+            (SELECT MAX(DATE_TRUNC('day', block_timestamp)) FROM order_placed), 
+            '1 day'::interval
+        )::date AS day
+),
+source_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS source_decimal,
+        cal.id AS source_id,
+        cal.chain AS source_chain,
+        cmd.current_price::FLOAT AS source_price,
+        (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.source_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.source_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.*, 
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.*,
+        dvt.dest_id AS dest_id,
+        dvt.dest_chain AS dest_chain,
+        dvt.dest_decimal AS dest_decimal,
+        dvt.dest_price AS dest_price,
+        dvt.dest_volume AS dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+daily_volume_table AS (
+    SELECT 
+        DATE_TRUNC('day', svt.block_timestamp) AS day,
+        SUM(svt.total_volume) AS daily_volume,
+        'Total' AS asset
+        FROM overall_volume_table_2 svt
+        GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+),
+filled_daily_volume_table AS (
+    SELECT 
+        ds.day,
+        COALESCE(dv.daily_volume, 0) AS daily_volume,
+        '{asset_id}' AS asset
+    FROM date_series ds
+    LEFT JOIN daily_volume_table dv
+    ON ds.day = dv.day
+),
+weekly_averaged_volume_table AS (
+    SELECT 
+        day,
+        asset,
+        -- Calculate the 7-day centered moving average
+        AVG(daily_volume) OVER (
+            ORDER BY day ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING
+        ) AS weekly_avg_volume
+    FROM filled_daily_volume_table
+)
+SELECT 
+    TO_CHAR(day, 'FMMonth FMDD, YYYY') AS day,
+    weekly_avg_volume AS total_weekly_avg_volume,
+    asset
+FROM weekly_averaged_volume_table
+WHERE day >= '{sd}'
+ORDER BY day;
+
+
+--Queries data on source chain volume.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    source_chain, 
+    source_id, 
+    SUM(source_volume) AS source_volume
+FROM 
+    overall_volume_table_2
+GROUP BY 
+    source_chain, 
+    source_id
+ORDER BY 
+    source_chain, 
+    source_id;
+
+
+--Queries destination chain data.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    dest_chain, 
+    dest_id, 
+    SUM(dest_volume) AS dest_volume
+FROM 
+    overall_volume_table_2
+GROUP BY 
+    dest_chain, 
+    dest_id
+ORDER BY 
+    dest_chain, 
+    dest_id;
+
+
+--Total chain volume.
+WITH source_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as source_decimal,
+  cal.id as source_id,
+  cal.chain as source_chain,
+  cmd.current_price::FLOAT AS source_price,
+  (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.source_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+SELECT DISTINCT
+  op.*, 
+  ti.decimals as dest_decimal,
+  cal.id as dest_id,
+  cal.chain as dest_chain,
+  cmd.current_price::FLOAT AS dest_price,
+  (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+  ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+  ON op.dest_asset = ti.address  -- Get source asset decimals
+INNER JOIN coingecko_assets_list cal
+  ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+  ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+SELECT DISTINCT
+  svt.*,
+  dvt.dest_id as dest_id,
+  dvt.dest_chain as dest_chain,
+  dvt.dest_decimal as dest_decimal,
+  dvt.dest_price as dest_price,
+  dvt.dest_volume as dest_volume,
+  (dvt.dest_volume + svt.source_volume) as total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+  ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    chain AS chain,
+    asset AS asset,
+    SUM(volume) AS total_volume
+FROM (
+    -- Treat source_chain/source_id as one group
+    SELECT 
+        source_chain AS chain, 
+        source_id AS asset, 
+        source_volume AS volume
+    FROM 
+        overall_volume_table_2
+
+    UNION ALL
+
+    -- Treat dest_chain/dest_id as another group
+    SELECT 
+        dest_chain AS chain, 
+        dest_id AS asset, 
+        dest_volume AS volume
+    FROM 
+        overall_volume_table_2
+) AS combined_data
+GROUP BY 
+    chain, 
+    asset
+ORDER BY 
+    chain, 
+    asset;
+
+
+--Produces a list of what percentage of trades come from top N users for 1 to N.
+WITH RankedTrades AS (
+SELECT
+    ROW_NUMBER() OVER (ORDER BY COUNT(order_id) DESC) AS rank,
+    address,
+    COUNT(order_id) AS trade_count
+FROM (
+    SELECT sender_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    UNION ALL
+    SELECT maker_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{sd}'
+) AS all_trades
+GROUP BY address
+),
+CumulativeTrades AS (
+SELECT
+    rank AS N,
+    SUM(trade_count) OVER (ORDER BY rank) AS cumulative_trade_count,
+    (SELECT SUM(trade_count) FROM RankedTrades) AS total_trades
+FROM RankedTrades
+WHERE rank <= 200
+)
+SELECT
+    N,
+    CAST(cumulative_trade_count * 100.0 / total_trades AS FLOAT) AS percentage_of_total_trades
+FROM CumulativeTrades
+ORDER BY N;
+
+
+
+--Produces a list of what percentage of volume come from top N users for 1 to N.
+WITH source_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.source_quantity, 
+    op.source_asset,
+    op.sender_address,  
+    ti.decimals AS source_decimal,
+    cal.id AS source_id,
+    cal.chain AS source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+    SELECT DISTINCT
+        op.order_uuid, 
+        op.dest_quantity, 
+        op.dest_asset,
+        me.maker_address,  
+        ti.decimals AS dest_decimal,
+        cal.id AS dest_id,
+        cal.chain AS dest_chain,
+        cmd.current_price::FLOAT AS dest_price,
+        (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    INNER JOIN token_info ti
+        ON op.dest_asset = ti.address
+    INNER JOIN coingecko_assets_list cal
+        ON op.dest_asset = cal.address
+    INNER JOIN coingecko_market_data cmd 
+        ON cal.id = cmd.id
+    WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+    SELECT DISTINCT
+        svt.order_uuid,
+        svt.sender_address,  
+        dvt.maker_address,   
+        svt.source_volume,
+        dvt.dest_volume,
+        (dvt.dest_volume + svt.source_volume) AS total_volume
+    FROM source_volume_table svt
+    INNER JOIN dest_volume_table dvt
+        ON svt.order_uuid = dvt.order_uuid
+),
+total_volume_table AS (
+    SELECT 
+        address,
+        COALESCE(SUM(total_volume), 0) AS total_user_volume
+    FROM (
+        SELECT sender_address AS address, total_volume
+        FROM overall_volume_table_2
+        UNION ALL
+        SELECT maker_address AS address, total_volume
+        FROM overall_volume_table_2
+    ) AS combined_addresses
+    GROUP BY address
+),
+ranked_volume_table AS (
+    SELECT 
+        address,
+        total_user_volume,
+        RANK() OVER (ORDER BY total_user_volume DESC) AS rank
+    FROM total_volume_table
+),
+cumulative_volume_table AS (
+    SELECT 
+        rank,
+        SUM(total_user_volume) OVER (ORDER BY rank) AS cumulative_volume,
+        (SUM(total_user_volume) OVER (ORDER BY rank) * 100.0) / (SUM(total_user_volume) OVER ()) AS percentage_of_total_volume
+    FROM ranked_volume_table
+)
+SELECT 
+    rank AS top_n,
+    percentage_of_total_volume
+FROM cumulative_volume_table
+WHERE rank <= 300;
+
+
+-- Collects total trade count for top 200 users.
+SELECT
+    address,
+    COUNT(order_id) AS trade_count
+FROM (
+    SELECT sender_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    UNION ALL
+    SELECT maker_address AS address, op.order_uuid AS order_id
+    FROM order_placed op
+    INNER JOIN match_executed me
+        ON op.order_uuid = me.order_uuid
+    WHERE op.block_timestamp >= '{sd}'
+) AS all_trades
+GROUP BY address
+ORDER BY trade_count DESC
+LIMIT 200;
+
+
+-- Collects a list of 200 of the best users in terms of volume.
+WITH source_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.source_quantity, 
+    op.source_asset,
+    op.sender_address,  -- Explicitly include sender_address
+    ti.decimals AS source_decimal,
+    cal.id AS source_id,
+    cal.chain AS source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS (
+SELECT DISTINCT
+    op.order_uuid, 
+    op.dest_quantity, 
+    op.dest_asset,
+    me.maker_address,  -- Explicitly include maker_address
+    ti.decimals AS dest_decimal,
+    cal.id AS dest_id,
+    cal.chain AS dest_chain,
+    cmd.current_price::FLOAT AS dest_price,
+    (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+FROM order_placed op
+INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+INNER JOIN token_info ti
+    ON op.dest_asset = ti.address
+INNER JOIN coingecko_assets_list cal
+    ON op.dest_asset = cal.address
+INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS (
+SELECT DISTINCT
+    svt.order_uuid,
+    svt.sender_address,  -- Explicitly use sender_address here
+    dvt.maker_address,   -- Explicitly use maker_address here
+    svt.source_volume,
+    dvt.dest_volume,
+    (dvt.dest_volume + svt.source_volume) AS total_volume
+FROM source_volume_table svt
+INNER JOIN dest_volume_table dvt
+    ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    address,
+    COALESCE(SUM(total_volume), 0) AS total_user_volume
+FROM (
+    SELECT sender_address AS address, total_volume
+    FROM overall_volume_table_2
+    UNION ALL
+    SELECT maker_address AS address, total_volume
+    FROM overall_volume_table_2
+) AS combined_addresses
+GROUP BY address
+ORDER BY total_user_volume DESC
+LIMIT 200;
+
+
+--This queries a list of all volume transfers between all asset-chain pairs.
+WITH source_volume_table AS(
+  SELECT DISTINCT
+    op.*, 
+    ti.decimals as source_decimal,
+    cal.id as source_id,
+    cal.chain as source_chain,
+    cmd.current_price::FLOAT AS source_price,
+    (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+  FROM order_placed op
+  INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+  INNER JOIN token_info ti
+    ON op.source_asset = ti.address
+  INNER JOIN coingecko_assets_list cal
+    ON op.source_asset = cal.address
+  INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+  WHERE op.block_timestamp >= '{sd}'
+),
+dest_volume_table AS(
+  SELECT DISTINCT
+    op.*, 
+    ti.decimals as dest_decimal,
+    cal.id as dest_id,
+    cal.chain as dest_chain,
+    cmd.current_price::FLOAT AS dest_price,
+    (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+  FROM order_placed op
+  INNER JOIN match_executed me
+    ON op.order_uuid = me.order_uuid
+  INNER JOIN token_info ti
+    ON op.dest_asset = ti.address
+  INNER JOIN coingecko_assets_list cal
+    ON op.dest_asset = cal.address
+  INNER JOIN coingecko_market_data cmd 
+    ON cal.id = cmd.id
+  WHERE op.block_timestamp >= '{sd}'
+),
+overall_volume_table_2 AS(
+  SELECT DISTINCT
+    svt.*,
+    dvt.dest_id as dest_id,
+    dvt.dest_chain as dest_chain,
+    dvt.dest_decimal as dest_decimal,
+    dvt.dest_price as dest_price,
+    dvt.dest_volume as dest_volume,
+    (dvt.dest_volume + svt.source_volume) as total_volume
+  FROM source_volume_table svt
+  INNER JOIN dest_volume_table dvt
+    ON svt.order_uuid = dvt.order_uuid
+)
+SELECT 
+    source_chain,
+    source_id,
+    dest_chain,
+    dest_id,
+    SUM(source_volume) AS total_source_volume,
+    SUM(dest_volume) AS total_dest_volume
+FROM 
+    overall_volume_table_2
+GROUP BY 
+    source_chain, source_id, dest_chain, dest_id
+ORDER BY 
+    total_source_volume DESC;
+
+
+--This gets a median fill time table.
+WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        cal.chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.source_asset = cal.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, chain, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+),
+median_time_fill_table AS (
+    SELECT
+        DATE(time_order_made) AS order_date,  -- Extract the date from time_order_made
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+    FROM fill_table
+    GROUP BY order_date  -- Group by the extracted date
+    ORDER BY order_date
+)
+SELECT * 
+FROM median_time_fill_table;
+
+
+--This generates a median fill table for source chains.
+WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        cal.chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.source_asset = cal.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, chain, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+),
+median_source_chain_fill_table AS (
+SELECT 
+    chain,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+FROM fill_table
+GROUP BY chain
+ORDER BY median_fill_time
+)
+SELECT * FROM median_source_chain_fill_table;
+
+
+
+--This queries a median fill table for destination chains.
+ WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        cal.chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.dest_asset = cal.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, chain, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+),
+median_dest_chain_fill_table AS (
+SELECT 
+    chain,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+FROM fill_table
+GROUP BY chain
+ORDER BY median_fill_time
+)
+SELECT * FROM median_dest_chain_fill_table;
+
+
+
+--Another median chain fill table.
+WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        cal.chain AS source_chain,
+        cal2.chain AS dest_chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.source_asset = cal.address
+    INNER JOIN coingecko_assets_list cal2
+      ON op.dest_asset = cal2.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, source_chain, dest_chain, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+),
+median_chain_fill_table AS (
+SELECT 
+    source_chain,
+    dest_chain,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fill_time) AS median_fill_time
+FROM fill_table
+GROUP BY source_chain, dest_chain
+ORDER BY median_fill_time
+)
+SELECT * FROM median_chain_fill_table;
+
+
+
+--Gets 10 highest fill times.
+WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        op.source_asset as source_address,
+        op.dest_asset as dest_address,
+        cal.chain AS source_chain,
+        cal2.chain AS dest_chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.source_asset = cal.address
+    INNER JOIN coingecko_assets_list cal2
+      ON op.dest_asset = cal2.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+)
+SELECT * 
+FROM fill_table
+ORDER BY fill_time DESC
+LIMIT 10;
+
+
+--Queries 10 lowest fill time trades.
+WITH deduplicated AS (
+    SELECT 
+        op.order_uuid,
+        op.source_asset as source_address,
+        op.dest_asset as dest_address,
+        cal.chain AS source_chain,
+        cal2.chain AS dest_chain,
+        op.block_timestamp as time_order_made,
+        EXTRACT(EPOCH FROM (me.block_timestamp - op.block_timestamp))::FLOAT AS fill_time,
+        ROW_NUMBER() OVER (PARTITION BY op.order_uuid ORDER BY me.block_timestamp) AS rn
+    FROM order_placed op
+    INNER JOIN match_executed me
+      ON op.order_uuid = me.order_uuid
+    INNER JOIN coingecko_assets_list cal
+      ON op.source_asset = cal.address
+    INNER JOIN coingecko_assets_list cal2
+      ON op.dest_asset = cal2.address
+    WHERE op.block_timestamp >= '{sd}'
+),
+fill_table AS (
+  SELECT order_uuid, source_chain, dest_chain, source_address, dest_address, time_order_made, fill_time
+  FROM deduplicated
+  WHERE rn = 1
+)
+SELECT * 
+FROM fill_table
+ORDER BY fill_time ASC
+LIMIT 10
