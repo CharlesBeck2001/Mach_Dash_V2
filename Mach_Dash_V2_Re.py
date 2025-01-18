@@ -90,14 +90,14 @@ st.markdown(
         justify-content: center;
         align-items: center;
         height: 60px;
-        background-color: #1a1a1a; /* Slightly lighter black for header */
+        background-color: white; /* Slightly lighter black for header */
         border-bottom: 1px solid #333; /* Subtle border for separation */
     }
     header h1 {
         font-size: 20px;
         margin: 0;
         padding: 0;
-        color: white; /* White text for header title */
+        color: green; /* White text for header title */
     }
     </style>
     <header>
