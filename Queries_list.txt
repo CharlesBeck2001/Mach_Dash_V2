@@ -1674,4 +1674,4 @@ fill_table AS (
 SELECT * 
 FROM fill_table
 ORDER BY fill_time ASC
-LIMIT 10
+LIMIT 10;
