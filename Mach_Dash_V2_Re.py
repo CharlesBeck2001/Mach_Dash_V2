@@ -1693,7 +1693,7 @@ if "preloaded_2" not in st.session_state:
 
 
 
-selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:4])
+selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:1])
 st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
 all_assets_data_hour = pd.DataFrame()
 
@@ -1712,7 +1712,6 @@ for asset in selected_assets_hourly:
 # Pivot the data to have separate columns for each asset
 pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
 pivot_data = pivot_data.fillna(0)
-st.write(pivot_data)
 
 # Create a full range of hours for the day
 #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
