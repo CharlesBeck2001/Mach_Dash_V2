@@ -761,6 +761,81 @@ if 1==1:
         )   
         SELECT COUNT(*) FROM user_trade_counts
         """
+
+        sql_query17 = """
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
+            FROM order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            SUM(total_volume) as volume
+        FROM overall_volume_table_2 svt
+        """
         
         
         
@@ -807,6 +882,11 @@ if 1==1:
     
             perc_above = df_perc_above['percent_users_with_more_than_one_trade'].iloc[0]
     
+        df_last_day_v = execute_sql(sql_query17)
+
+        df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
+        st.write(df_last_day_v)
+        
         df_average_trades = pd.json_normalize(df_average_trades['result'])
         #st.write(df_average_trades['average_trades_per_year'])
         average_trades = df_average_trades['average_trades_per_user'].iloc[0]
