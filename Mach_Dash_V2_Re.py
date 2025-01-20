@@ -966,7 +966,7 @@ st.title("Volume Analysis")
 #today = datetime.now()
 
 @st.cache_data
-def asset_fetch(sd):
+def asset_fetch():
     asset_query = f"""
     WITH source_volume_table AS (
         SELECT DISTINCT
@@ -1044,8 +1044,6 @@ def asset_fetch(sd):
     asset_list = execute_sql(asset_query)
     asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
     return(asset_list)
-
-asset_list = asset_fetch(start_date_2)
 
 # Function to execute query and retrieve data
 @st.cache_data
@@ -1567,6 +1565,7 @@ def get_last_day(asset_id, sd):
 
     return pd.json_normalize(execute_sql(query)['result'])
 
+asset_list = asset_fetch()
 
 asset_list = asset_list[:20]
 asset_list = ['Total'] + asset_list
