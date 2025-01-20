@@ -1712,9 +1712,7 @@ for asset in selected_assets_hourly:
 # Pivot the data to have separate columns for each asset
 pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
 
-# Ensure the index is in datetime format
-pivot_data.index = pd.to_datetime(pivot_data.index, errors='coerce')
-
+st.write(pivot_data)
 # Create a full range of hours for the day
 full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
 pivot_data = pivot_data.reindex(full_hour_range)
