@@ -1576,7 +1576,7 @@ def get_last_day(asset_id, sd):
             COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume,
             '{asset_id}' AS asset
         FROM overall_volume_table_2 svt
-        WHERE svt.source_id = '{assed_id}' OR svt.dest_id = '{assed_id}'
+        WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
         ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
