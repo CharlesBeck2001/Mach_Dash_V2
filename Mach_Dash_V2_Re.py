@@ -882,10 +882,12 @@ if 1==1:
     
             perc_above = df_perc_above['percent_users_with_more_than_one_trade'].iloc[0]
     
-        df_last_day_v = execute_sql(sql_query17)
+        df_last_day_v = execute_sql(sql_query17)    
+        
+        st.write(df_last_day_v)
+        
 
         df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
-        st.write(df_last_day_v)
         
         df_average_trades = pd.json_normalize(df_average_trades['result'])
         #st.write(df_average_trades['average_trades_per_year'])
