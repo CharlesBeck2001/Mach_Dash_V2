@@ -1715,23 +1715,6 @@ pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='t
 # Ensure the index is in datetime format
 pivot_data.index = pd.to_datetime(pivot_data.index, errors='coerce')
 
-# Handle missing or invalid timestamps (NaT values)
-pivot_data = pivot_data.dropna(subset=[pivot_data.index.name])  # Drop rows with invalid datetime index
-
-# Re-check the min and max after cleaning
-if not pivot_data.empty:
-    start_time = pivot_data.index.min()
-    end_time = pivot_data.index.max()
-
-    # Ensure both start and end are valid timestamps
-    if pd.notna(start_time) and pd.notna(end_time):
-        full_hour_range = pd.date_range(start=start_time, end=end_time, freq='H')
-        pivot_data = pivot_data.reindex(full_hour_range, fill_value=0)
-    else:
-        raise ValueError("Pivot data contains invalid datetime range.")
-else:
-    raise ValueError("Pivot data is empty after cleaning.")
-
 # Create a full range of hours for the day
 full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
 pivot_data = pivot_data.reindex(full_hour_range)
