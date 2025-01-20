@@ -1929,7 +1929,7 @@ INNER JOIN dest_volume_table dvt
             "dest_chains": dest_chains,
             "dest_ids": dest_ids,
             "df_total_chain_volume": df_total_chain_volume,
-            "total_chains": total_chains,=
+            "total_chains": total_chains,
             "total_assets": total_assets,
         }
 
