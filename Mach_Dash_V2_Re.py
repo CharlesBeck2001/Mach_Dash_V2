@@ -884,10 +884,10 @@ if 1==1:
     
         df_last_day_v = execute_sql(sql_query17)    
         
-        st.write(df_last_day_v)
-        
-
         df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
+
+        last_day_v = df_last_day_v['volume'].iloc[0]
+        st.write(last_day_v)
         
         df_average_trades = pd.json_normalize(df_average_trades['result'])
         #st.write(df_average_trades['average_trades_per_year'])
