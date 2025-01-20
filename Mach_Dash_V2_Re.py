@@ -762,7 +762,7 @@ if 1==1:
         SELECT COUNT(*) FROM user_trade_counts
         """
 
-        sql_query17 = """
+        sql_query17 = f"""
         WITH latest_date AS (
             SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
             FROM order_placed
@@ -887,6 +887,8 @@ if 1==1:
         df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
 
         last_day_v = df_last_day_v['volume'].iloc[0]
+
+        st.write(last_day_v)
         
         df_average_trades = pd.json_normalize(df_average_trades['result'])
         #st.write(df_average_trades['average_trades_per_year'])
