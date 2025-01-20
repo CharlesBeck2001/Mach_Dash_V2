@@ -1929,7 +1929,7 @@ INNER JOIN dest_volume_table dvt
             "dest_chains": dest_chains,
             "dest_ids": dest_ids,
             "df_total_chain_volume": df_total_chain_volume,
-            "total_chains": total_chains,
+            "total_chains": total_chains,=
             "total_assets": total_assets,
         }
 
@@ -2633,11 +2633,29 @@ def sankey_data(sd):
     data["dest_chain"] = data["dest_chain"] + " (D)"
     data["source_id"] = data["source_id"] + " (S)"
     data["dest_id"] = data["dest_id"] + " (D)"
+
+    # Combine asset and chain for source and destination pairs, appending (S) and (D)
+    data["source_pair"] = data["source_id"] + " | " + data["source_chain"] + " (S)"
+    data["dest_pair"] = data["dest_id"] + " | " + data["dest_chain"] + " (D)"
     
     # Compute total volume for assets
     source_asset_volume = data.groupby("source_id")["total_source_volume"].sum().reset_index()
     dest_asset_volume = data.groupby("dest_id")["total_dest_volume"].sum().reset_index()
-    
+
+    # Group and sum volumes for asset-chain pairs
+    pair_volume = data.groupby(["source_pair", "dest_pair"], as_index=False).agg({
+        "total_source_volume": "sum",
+        "total_dest_volume": "sum"
+    })
+
+    # Compute average volume for pairs
+    pair_volume["avg_volume"] = (
+        pair_volume["total_source_volume"] + pair_volume["total_dest_volume"]
+    ) / 2
+
+    # Select the top 10 asset-chain pairs by avg_volume
+    top_pair_data = pair_volume.nlargest(10, "avg_volume")
+
     # Combine source and destination volumes for assets
     asset_volume = pd.concat([
         source_asset_volume.rename(columns={"source_id": "asset", "total_source_volume": "total_volume"}),
@@ -2707,6 +2725,7 @@ def sankey_data(sd):
     return {
             "top_asset_data": top_asset_data,
             "top_chain_data": top_chain_data,
+            "top_pair_data": top_pair_data,  # New data for asset-chain pairs
     }
     
 def create_sankey_chart(df, source_col, target_col, value_col):
@@ -2761,6 +2780,16 @@ if time_ranges[selected_range_5] is not None:
         st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
     st.plotly_chart(chain_chart)
+
+    st.subheader("Asset-Chain Pair Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Asset-Chain Pairs")
+    pair_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][time_ranges[selected_range_5]]['top_pair_data'], 
+        "source_pair", 
+        "dest_pair", 
+        "avg_volume"
+    )
+    st.plotly_chart(pair_chart)
     
 else:
     
@@ -2777,6 +2806,16 @@ else:
         st.session_state["preloaded_5"][0]['top_chain_data'], "source_chain", "dest_chain", "total_source_volume"
     )
     st.plotly_chart(chain_chart)
+
+    st.subheader("Asset-Chain Pair Flow Chart")
+    st.write("Flow Chart for the Top 10 Flows Between Asset-Chain Pairs")
+    pair_chart = create_sankey_chart(
+        st.session_state["preloaded_5"][0]['top_pair_data'], 
+        "source_pair", 
+        "dest_pair", 
+        "avg_volume"
+    )
+    st.plotly_chart(pair_chart)
 
 
 time_ranges_6 = {
