@@ -887,8 +887,6 @@ if 1==1:
         df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
 
         last_day_v = df_last_day_v['volume'].iloc[0]
-
-        st.write(last_day_v)
         
         df_average_trades = pd.json_normalize(df_average_trades['result'])
         #st.write(df_average_trades['average_trades_per_year'])
@@ -974,7 +972,7 @@ if 1==1:
     def load_metrics(data):
         # Define the layout
                 
-        col1, col2, col3, col4, col5, col6 = st.columns(5)
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
         
         # Box 1
         with col1:
