@@ -994,7 +994,7 @@ if 1==1:
             st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
 
         with col6: 
-            st.metric(label="Total Volume in the Previous Day",value = f"${data['last_day_v']:,.2f})
+            st.metric(label="Total Volume in the Previous Day",value = f"${data['last_day_v']:,.2f}")
 
         st.markdown(
         """
