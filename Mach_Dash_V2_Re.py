@@ -1580,7 +1580,7 @@ def get_last_day(asset_id, sd):
         FROM overall_volume_table_2 svt
         WHERE svt.source_id = '{assed_id}' OR svt.dest_id = '{assed_id}'
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
-        ORDER BY DATE_TRUNC('hour', svt.block_timestamp);
+        ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
         
     else:
@@ -1661,7 +1661,7 @@ def get_last_day(asset_id, sd):
             '{asset_id}' AS asset
         FROM overall_volume_table_2 svt
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
-        ORDER BY DATE_TRUNC('hour', svt.block_timestamp);
+        ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
 
     return pd.json_normalize(execute_sql(query)['result'])
@@ -1674,7 +1674,7 @@ asset_list_day = asset_fetch_day()
 asset_list_day = asset_list_day[:5]
 asset_list_day = ['Total'] + asset_list_day
 
-
+st.write(asset_list_day)
 if "preloaded_2" not in st.session_state:
     preloaded_2 = {}
     for asset in asset_list:
