@@ -1667,11 +1667,10 @@ def get_last_day(asset_id, sd):
     return pd.json_normalize(execute_sql(query)['result'])
 
 asset_list = asset_fetch()
-asset_list_day = asset_fetch_day
 asset_list = asset_list[:20]
 asset_list = ['Total'] + asset_list
 
-asset_list_day = asset_fetch_day
+asset_list_day = asset_fetch_day()
 asset_list_day = asset_list_day[:20]
 asset_list_day = ['Total'] + asset_list_day
 
