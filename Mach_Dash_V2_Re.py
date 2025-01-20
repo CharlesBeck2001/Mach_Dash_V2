@@ -1661,7 +1661,7 @@ def get_last_day(asset_id, sd):
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
         ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
-    st.write(execute_sql(query))
+    #st.write(execute_sql(query))
     return pd.json_normalize(execute_sql(query)['result'])
 
 asset_list = asset_fetch()
