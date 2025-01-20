@@ -1711,14 +1711,16 @@ for asset in selected_assets_hourly:
 
 # Pivot the data to have separate columns for each asset
 pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
-
+pivot_data = pivot_data.fillna(0)
 st.write(pivot_data)
+
 # Create a full range of hours for the day
-full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
-pivot_data = pivot_data.reindex(full_hour_range)
+#full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
+#pivot_data = pivot_data.reindex(full_hour_range)
+
 
 # Fill gaps using interpolation
-pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
+#pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
 
 # Plot the cumulative data using st.line_chart
 st.line_chart(pivot_data, use_container_width=True)
