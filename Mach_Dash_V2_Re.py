@@ -738,7 +738,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
-            WHERE op.sender_address = me.maker_address
+            WHERE op.block_timestamp >= '{sd}'
             GROUP BY op.sender_address
         )   
         SELECT
@@ -756,8 +756,7 @@ if 1==1:
             FROM order_placed op
             INNER JOIN match_executed me
                 ON op.order_uuid = me.order_uuid
-            WHERE op.sender_address = me.maker_address
-              AND op.block_timestamp >= '{sd}'
+            WHERE op.block_timestamp >= '{sd}'
             GROUP BY op.sender_address
         )   
         SELECT COUNT(*) FROM user_trade_counts
