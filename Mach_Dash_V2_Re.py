@@ -1283,7 +1283,8 @@ def get_volume_vs_date(asset_id, sd):
         GROUP BY DATE_TRUNC('day', svt.block_timestamp)
         ORDER BY day
         """
-        
+
+    st.write(execute_sql(query))
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
