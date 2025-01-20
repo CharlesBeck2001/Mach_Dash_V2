@@ -1499,10 +1499,9 @@ def get_weekly_volume_vs_date(asset_id, sd):
 
 def get_last_day(asset_id, sd):
 
-    "WHERE svt.source_id = 'usd-coin' OR svt.dest_id = 'usd-coin'"
     if asset_id != 'Total':
 
-        query = """
+        query = f"""
         WITH latest_date AS (
             SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
             FROM order_placed
@@ -1584,7 +1583,7 @@ def get_last_day(asset_id, sd):
         
     else:
             
-        query = """
+        query = f"""
         WITH latest_date AS (
             SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
             FROM order_placed
