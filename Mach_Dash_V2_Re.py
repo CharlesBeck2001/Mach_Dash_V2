@@ -1675,6 +1675,7 @@ asset_list_day = asset_list_day[:5]
 asset_list_day = ['Total'] + asset_list_day
 
 st.write(asset_list_day)
+
 if "preloaded_2" not in st.session_state:
     preloaded_2 = {}
     for asset in asset_list:
