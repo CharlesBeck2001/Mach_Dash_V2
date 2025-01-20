@@ -965,25 +965,6 @@ st.title("Volume Analysis")
 # Get today's date
 #today = datetime.now()
 
-time_ranges_2 = {
-    "All Time": None,  # Special case for no date filter
-    "Last Week": 7,
-    "Last Month": 30,
-    "Last 3 Months": 90,
-    "Last 6 Months": 180
-}
-
-selected_range_2 = st.selectbox("Select a time range for the volume display:", list(time_ranges_2.keys()))
-
-# Calculate the start date
-if time_ranges[selected_range_2] is not None:
-    start_date_2 = today - timedelta(days=time_ranges[selected_range_2])
-    start_date_2 = start_date_2.strftime('%Y-%m-%dT%H:%M:%S')
-    #st.write(start_date)
-else:
-    start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
-    #st.write(start_date)
-
 @st.cache_data
 def asset_fetch(sd):
     asset_query = f"""
@@ -1418,6 +1399,175 @@ def get_weekly_volume_vs_date(asset_id, sd):
     return pd.json_normalize(execute_sql(query)['result'])
 
 
+def get_last_day(asset_id, sd):
+
+    "WHERE svt.source_id = 'usd-coin' OR svt.dest_id = 'usd-coin'"
+    if asset_id != 'Total':
+
+        query = """
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
+            FROM order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('hour', svt.block_timestamp), 'HH12 AM') AS hour,
+            COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        WHERE svt.source_id = '{assed_id}' OR svt.dest_id = '{assed_id}'
+        GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
+        ORDER BY DATE_TRUNC('hour', svt.block_timestamp);
+        """
+        
+    else:
+            
+        query = """
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(block_timestamp)) AS max_date
+            FROM order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.source_quantity) / POWER(10, ti.decimals) AS source_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.source_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.source_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        dest_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS dest_decimal,
+                cal.id AS dest_id,
+                cal.chain AS dest_chain,
+                cmd.current_price::FLOAT AS dest_price,
+                (cmd.current_price::FLOAT * op.dest_quantity) / POWER(10, ti.decimals) AS dest_volume
+            FROM order_placed op
+            INNER JOIN match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.dest_asset = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.dest_asset = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.block_timestamp >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.block_timestamp < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                dvt.dest_id AS dest_id,
+                dvt.dest_chain AS dest_chain,
+                dvt.dest_decimal AS dest_decimal,
+                dvt.dest_price AS dest_price,
+                dvt.dest_volume AS dest_volume,
+                (dvt.dest_volume + svt.source_volume) AS total_volume
+            FROM source_volume_table svt
+            INNER JOIN dest_volume_table dvt
+                ON svt.order_uuid = dvt.order_uuid
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('hour', svt.block_timestamp), 'HH12 AM') AS hour,
+            COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
+        ORDER BY DATE_TRUNC('hour', svt.block_timestamp);
+        """
+
+    return pd.json_normalize(execute_sql(query)['result'])
+
+
 asset_list = asset_list[:20]
 asset_list = ['Total'] + asset_list
 
@@ -1427,11 +1577,64 @@ if "preloaded_2" not in st.session_state:
         
         daily_vol = get_volume_vs_date(asset, time_point['oldest_time'][0])
         weekly_vol = get_weekly_volume_vs_date(asset, time_point['oldest_time'][0])
+        hourly_vol = get_last_day(asset_id, time_point['oldest_time'][0])
         preloaded_2[asset + ' Weekly Average'] = weekly_vol
         preloaded_2[asset + ' Daily Value'] = daily_vol
+        preloaded_2[asset + ' Hourly Value'] = hourly_vol
 
     st.session_state["preloaded_2"] = preloaded_2
 
+
+
+selected_assets_hourly = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
+st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
+all_assets_data_hour = pd.DataFrame()
+
+# Process individual assets
+for asset in selected_assets_hourly:
+        # Fetch data for the selected assets
+        data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+
+        if data.empty:
+            st.warning(f"No data available for {asset}!")
+        else:
+            # Add the 'asset' column (asset name is already included in 'data')
+            all_assets_data_hour = pd.concat([all_assets_data, data])
+
+
+# Pivot the data to have separate columns for each asset
+pivot_data = all_assets_data.pivot(index='hour', columns='asset', values='total_hourly_volume')
+
+# Create a full range of hours for the day
+full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
+pivot_data = pivot_data.reindex(full_hour_range)
+
+# Fill gaps using interpolation
+pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
+
+# Plot the cumulative data using st.line_chart
+st.line_chart(pivot_data, use_container_width=True)
+
+
+
+time_ranges_2 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Week": 7,
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
+
+selected_range_2 = st.selectbox("Select a time range for the long-term volume display:", list(time_ranges_2.keys()))
+
+# Calculate the start date
+if time_ranges[selected_range_2] is not None:
+    start_date_2 = today - timedelta(days=time_ranges[selected_range_2])
+    start_date_2 = start_date_2.strftime('%Y-%m-%dT%H:%M:%S')
+    #st.write(start_date)
+else:
+    start_date_2 = time_point['oldest_time'][0]  # No filter for "All Time"
+    #st.write(start_date)
 # Multi-select assets
 selected_assets = st.multiselect("Select Assets", asset_list, default=asset_list[:4])
 
