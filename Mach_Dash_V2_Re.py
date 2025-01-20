@@ -1283,8 +1283,6 @@ def get_volume_vs_date(asset_id, sd):
         GROUP BY DATE_TRUNC('day', svt.block_timestamp)
         ORDER BY day
         """
-
-    st.write(execute_sql(query))
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
@@ -1664,7 +1662,7 @@ def get_last_day(asset_id, sd):
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
         ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
-
+    st.write(execute_sql(query))
     return pd.json_normalize(execute_sql(query)['result'])
 
 asset_list = asset_fetch()
