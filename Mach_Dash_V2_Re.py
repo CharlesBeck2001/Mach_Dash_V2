@@ -954,6 +954,9 @@ selected_range = st.selectbox(
 update_start_date(selected_range)
 if time_ranges[selected_range] is not None:
     load_metrics(st.session_state["preloaded"][time_ranges[selected_range]])
+    date = today - timedelta(days=time_ranges[selected_range])
+    date = date.strftime('%Y-%m-%dT%H:%M:%S')
+    st.write(date)
 else:
     load_metrics(st.session_state["preloaded"][0])
     
