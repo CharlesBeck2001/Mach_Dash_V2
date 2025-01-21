@@ -1642,7 +1642,7 @@ def get_weekly_volume_vs_date(asset_id, sd):
             SELECT 
                 DATE_TRUNC('day', svt.date) AS day,
                 SUM(svt.total_volume) AS daily_volume,
-                'bridged-usdt' AS asset
+                '{asset_id}' AS asset
                 FROM combined_volume_table svt
                 WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
                 GROUP BY DATE_TRUNC('day', svt.date)
@@ -2050,7 +2050,7 @@ if "preloaded_2" not in st.session_state:
         
         daily_vol = get_volume_vs_date(asset, time_point['oldest_time'][0])
         weekly_vol = get_weekly_volume_vs_date(asset, time_point['oldest_time'][0])
-        st.write(weekly_vol)
+        
         preloaded_2[asset + ' Weekly Average'] = weekly_vol
         preloaded_2[asset + ' Daily Value'] = daily_vol
 
