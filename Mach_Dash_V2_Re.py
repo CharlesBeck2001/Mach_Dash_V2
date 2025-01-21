@@ -1267,8 +1267,63 @@ def asset_fetch_day():
     ORDER BY total_volume DESC
     """
 
+    asset_query_2 = f"""
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(created_at)) AS max_date
+            FROM mm_order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.created_at >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.created_at < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                svt.source_volume AS total_volume
+            FROM source_volume_table svt
+        ),
+        consolidated_volumes AS (
+        SELECT
+            id,
+            SUM(volume) AS total_volume
+        FROM (
+            SELECT
+                source_id AS id,
+                SUM(source_volume) AS volume
+            FROM overall_volume_table_2
+            GROUP BY source_id
+        ) combined
+        GROUP BY id
+    )
+    SELECT id
+    FROM consolidated_volumes
+    ORDER BY total_volume DESC
+    """
+    
     # Execute the query and process results
-    asset_list = execute_sql(asset_query)
+    asset_list = execute_sql(asset_query_2)
     asset_list = pd.json_normalize(asset_list['result'])['id'].tolist()
     return asset_list
 
@@ -1706,6 +1761,53 @@ def get_last_day(asset_id, sd):
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
         ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
+
+        query_2 = f"""
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(created_at)) AS max_date
+            FROM mm_order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.created_at >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.created_at < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                svt.source_volume AS total_volume
+            FROM source_volume_table svt
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('hour', svt.created_at), 'HH12 AM') AS hour,
+            COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        WHERE svt.source_id = '{asset_id}'
+        GROUP BY DATE_TRUNC('hour', svt.created_at)
+        ORDER BY DATE_TRUNC('hour', svt.created_at)
+        """
         
     else:
             
@@ -1787,8 +1889,54 @@ def get_last_day(asset_id, sd):
         GROUP BY DATE_TRUNC('hour', svt.block_timestamp)
         ORDER BY DATE_TRUNC('hour', svt.block_timestamp)
         """
+
+        query_2 = f"""
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(created_at)) AS max_date
+            FROM mm_order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.created_at >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.created_at < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                svt.source_volume AS total_volume
+            FROM source_volume_table svt
+        )
+        SELECT 
+            TO_CHAR(DATE_TRUNC('hour', svt.created_at), 'HH12 AM') AS hour,
+            COALESCE(SUM(svt.total_volume), 0) AS total_hourly_volume,
+            '{asset_id}' AS asset
+        FROM overall_volume_table_2 svt
+        GROUP BY DATE_TRUNC('hour', svt.created_at)
+        ORDER BY DATE_TRUNC('hour', svt.created_at)
+        """
     #st.write(execute_sql(query))
-    return pd.json_normalize(execute_sql(query)['result'])
+    return pd.json_normalize(execute_sql(query_2)['result'])
 
 asset_list = asset_fetch()
 asset_list = asset_list[:20]
