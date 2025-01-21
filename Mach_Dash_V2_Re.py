@@ -2067,6 +2067,13 @@ def get_last_day(asset_id, sd):
     #st.write(execute_sql(query))
     return pd.json_normalize(execute_sql(query_2)['result'])
 
+previous_day = today - timedelta(days=1)
+# Function to create the datetime object for the prior day
+def create_prior_day_datetime(hour_str):
+    time_obj = datetime.strptime(hour_str, "%I %p").time()  # Convert "01 PM" to time object
+    return datetime.combine(previous_day.date(), time_obj)  # Combine with the prior day's date
+
+
 asset_list = asset_fetch()
 asset_list = asset_list[:15]
 asset_list = ['Total'] + asset_list
@@ -2114,14 +2121,17 @@ with col1:
     for asset in selected_assets_hourly:
             # Fetch data for the selected assets
             data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+
+            # Apply the function to the 'hour' column
+            data['hour'] = data['hour'].apply(create_prior_day_datetime)
     
             if data.empty:
                 st.warning(f"No data available for {asset}!")
             else:
                 # Add the 'asset' column (asset name is already included in 'data')
                 all_assets_data_hour = pd.concat([all_assets_data_hour, data])
+                
     
-
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
