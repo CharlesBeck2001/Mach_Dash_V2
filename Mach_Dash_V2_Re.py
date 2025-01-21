@@ -2120,7 +2120,7 @@ with col1:
                 all_assets_data_hour = pd.concat([all_assets_data_hour, data])
     
 
-    all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
+    #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
