@@ -109,6 +109,7 @@ st.markdown(
 st.title("Mach Exchange Statistics")
 # Get today's date
 today = datetime.now()
+st.write(today)
 
 if "today" not in st.session_state:
     st.session_state["today"] = datetime.now()
