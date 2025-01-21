@@ -1063,6 +1063,7 @@ if "preloaded" not in st.session_state:
     
     date = time_point['oldest_time'][0]
     data = stats_box_maker(date)
+    st.write(date)
     preloaded[0] = data
 
     st.session_state["preloaded"] = preloaded
