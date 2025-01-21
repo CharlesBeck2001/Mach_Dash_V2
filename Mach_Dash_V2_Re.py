@@ -1503,14 +1503,6 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.src_asset_address = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.created_at >= (
-                    SELECT max_date - INTERVAL '1 day' 
-                    FROM latest_date
-                )
-              AND op.created_at < (
-                    SELECT max_date 
-                    FROM latest_date
-                )
         ),
         overall_volume_table_3 AS (
             SELECT DISTINCT
