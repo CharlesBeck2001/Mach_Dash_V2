@@ -836,7 +836,48 @@ if 1==1:
             SUM(total_volume) as volume
         FROM overall_volume_table_2 svt
         """
-        
+
+        sql_query18 = """
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(created_at)) AS max_date
+            FROM mm_order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.created_at >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.created_at < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                svt.source_volume AS total_volume
+            FROM source_volume_table svt
+        )
+        SELECT 
+            SUM(total_volume) AS volume
+        FROM overall_volume_table_2
+        """
         
         
         df_sql_timeframe = execute_sql(sql_query1)
@@ -882,7 +923,7 @@ if 1==1:
     
             perc_above = df_perc_above['percent_users_with_more_than_one_trade'].iloc[0]
     
-        df_last_day_v = execute_sql(sql_query17)    
+        df_last_day_v = execute_sql(sql_query18)    
         
         df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
 
