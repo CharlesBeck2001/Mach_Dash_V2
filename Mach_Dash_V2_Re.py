@@ -2105,6 +2105,7 @@ if "preloaded_2" not in st.session_state:
 selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:1])
 col1, col2 = st.columns(2)
 with col1:
+    
     st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
     all_assets_data_hour = pd.DataFrame()
     
@@ -2134,6 +2135,7 @@ with col1:
     #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
     
     # Plot the cumulative data using st.line_chart
+    st.write(pivot_data)
     st.line_chart(pivot_data, use_container_width=True)
 
 with col2:
@@ -2239,8 +2241,6 @@ with col2:
     # Calculate cumulative sum for each asset
     cumulative_data = pivot_data.cumsum()
 
-    st.write(cumulative_data)
-
     # Plot the cumulative data using st.line_chart
     st.line_chart(cumulative_data, use_container_width=True)
 
@@ -2328,7 +2328,6 @@ with col1:
             # If the column doesn't exist for the asset, create it with NaN values
             pivot_data[asset] = pd.NA
     # Plot the combined data using st.line_chart
-    st.write(pivot_data)
     st.line_chart(pivot_data, use_container_width=True)
 
 col1, col2 = st.columns(2)
