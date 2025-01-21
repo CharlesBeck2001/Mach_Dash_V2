@@ -2103,7 +2103,7 @@ if "preloaded_2" not in st.session_state:
 
 
 selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:1])
-
+col1, col2 = st.columns(2)
 with col1:
     st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
     all_assets_data_hour = pd.DataFrame()
