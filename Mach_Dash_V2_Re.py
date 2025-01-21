@@ -2123,7 +2123,7 @@ with col1:
             data = st.session_state["preloaded_2"][asset + ' Hourly Value']
 
             # Apply the function to the 'hour' column
-            data['hour'] = data['hour'].apply(create_prior_day_datetime)
+            data['date'] = data['hour'].apply(create_prior_day_datetime)
     
             if data.empty:
                 st.warning(f"No data available for {asset}!")
@@ -2134,7 +2134,7 @@ with col1:
     
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
-    pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
+    pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
     
     # Create a full range of hours for the day
