@@ -2103,73 +2103,75 @@ if "preloaded_2" not in st.session_state:
 
 
 selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:1])
-st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
-all_assets_data_hour = pd.DataFrame()
 
-# Process individual assets
-for asset in selected_assets_hourly:
-        # Fetch data for the selected assets
-        data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+with col1:
+    st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
+    all_assets_data_hour = pd.DataFrame()
+    
+    # Process individual assets
+    for asset in selected_assets_hourly:
+            # Fetch data for the selected assets
+            data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+    
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data_hour = pd.concat([all_assets_data_hour, data])
+    
+    
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
+    pivot_data = pivot_data.fillna(0)
+    
+    
+    # Create a full range of hours for the day
+    #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
+    #pivot_data = pivot_data.reindex(full_hour_range)
+    
+    
+    # Fill gaps using interpolation
+    #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
+    
+    # Plot the cumulative data using st.line_chart
+    st.line_chart(pivot_data, use_container_width=True)
 
-        if data.empty:
-            st.warning(f"No data available for {asset}!")
-        else:
-            # Add the 'asset' column (asset name is already included in 'data')
-            all_assets_data_hour = pd.concat([all_assets_data_hour, data])
-
-
-# Pivot the data to have separate columns for each asset
-pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
-pivot_data = pivot_data.fillna(0)
-
-
-# Create a full range of hours for the day
-#full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
-#pivot_data = pivot_data.reindex(full_hour_range)
-
-
-# Fill gaps using interpolation
-#pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
-
-# Plot the cumulative data using st.line_chart
-st.line_chart(pivot_data, use_container_width=True)
-
-
-st.subheader("Volume In The Last Week")
-all_assets_data_day = pd.DataFrame()
-
-# Process individual assets
-for asset in selected_assets_hourly:
-        # Fetch data for the selected assets
-        
-        data = st.session_state["preloaded_2"][asset + ' Week Volume']
-
-        date = today - timedelta(days=7)
-        date = date.strftime('%Y-%m-%dT%H:%M:%S')
-        
-        data = data[pd.to_datetime(data['day']) > pd.to_datetime(date)]
-
-        if data.empty:
-            st.warning(f"No data available for {asset}!")
-        else:
-            # Add the 'asset' column (asset name is already included in 'data')
-            all_assets_data_day = pd.concat([all_assets_data_day, data])
-
-
-# Pivot the data to have separate columns for each asset
-pivot_data = all_assets_data_day.pivot(index='day', columns='asset', values='total_daily_volume')
-pivot_data = pivot_data.fillna(0)
-
-# Create a full range of hours for the day
-#full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
-#pivot_data = pivot_data.reindex(full_hour_range)
-
-
-# Fill gaps using interpolation
-#pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
-
-# Plot the cumulative data using st.line_chart
-st.line_chart(pivot_data, use_container_width=True)
+with col2:
+    st.subheader("Volume In The Last Week")
+    all_assets_data_day = pd.DataFrame()
+    
+    # Process individual assets
+    for asset in selected_assets_hourly:
+            # Fetch data for the selected assets
+            
+            data = st.session_state["preloaded_2"][asset + ' Week Volume']
+    
+            date = today - timedelta(days=7)
+            date = date.strftime('%Y-%m-%dT%H:%M:%S')
+            
+            data = data[pd.to_datetime(data['day']) > pd.to_datetime(date)]
+    
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data_day = pd.concat([all_assets_data_day, data])
+    
+    
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data_day.pivot(index='day', columns='asset', values='total_daily_volume')
+    pivot_data = pivot_data.fillna(0)
+    
+    # Create a full range of hours for the day
+    #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
+    #pivot_data = pivot_data.reindex(full_hour_range)
+    
+    
+    # Fill gaps using interpolation
+    #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
+    
+    # Plot the cumulative data using st.line_chart
+    st.line_chart(pivot_data, use_container_width=True)
 
 
 
