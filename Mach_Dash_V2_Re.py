@@ -1701,7 +1701,6 @@ def get_weekly_volume_vs_date(asset_id, sd):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1720,28 +1719,61 @@ def get_weekly_volume_vs_date(asset_id, sd):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
-                svt.*,
-                dvt.dest_id AS dest_id,
-                dvt.dest_chain AS dest_chain,
-                dvt.dest_decimal AS dest_decimal,
-                dvt.dest_price AS dest_price,
-                dvt.dest_volume AS dest_volume,
-                (dvt.dest_volume + svt.source_volume) AS total_volume
+                svt.order_uuid AS order_id,
+                (dvt.dest_volume + svt.source_volume) AS total_volume,
+                svt.block_timestamp AS date,
+                svt.source_id AS source_id,
+                dvt.dest_id AS dest_id
             FROM source_volume_table svt
             INNER JOIN dest_volume_table dvt
                 ON svt.order_uuid = dvt.order_uuid
         ),
+        source_volume_table_3 AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+        ),
+        overall_volume_table_3 AS (
+            SELECT DISTINCT
+                svt.order_uuid AS order_id,
+                svt.source_volume AS total_volume,
+                svt.created_at AS date,
+                svt.source_id AS source_id,
+                '' AS dest_id
+            FROM source_volume_table_3 svt
+        ),
+        combined_volume_table AS (
+            SELECT DISTINCT
+                * 
+            FROM overall_volume_table_2
+            UNION
+            SELECT DISTINCT
+                * 
+            FROM overall_volume_table_3
+        ),
         daily_volume_table AS (
             SELECT 
-                DATE_TRUNC('day', svt.block_timestamp) AS day,
+                DATE_TRUNC('day', svt.date) AS day,
                 SUM(svt.total_volume) AS daily_volume,
-                'Total' AS asset
-                FROM overall_volume_table_2 svt
-                GROUP BY DATE_TRUNC('day', svt.block_timestamp)
+                '{asset_id}' AS asset
+                FROM combined_volume_table svt
+                GROUP BY DATE_TRUNC('day', svt.date)
         ),
         filled_daily_volume_table AS (
             SELECT 
@@ -1767,7 +1799,6 @@ def get_weekly_volume_vs_date(asset_id, sd):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        WHERE day >= '{sd}'
         ORDER BY day
         """
     # Execute the query and return the result as a DataFrame
