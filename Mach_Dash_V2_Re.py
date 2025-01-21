@@ -1651,7 +1651,7 @@ def get_weekly_volume_vs_date(asset_id, sd):
             SELECT 
                 ds.day,
                 COALESCE(dv.daily_volume, 0) AS daily_volume,
-                'bridged-usdt' AS asset
+                '{asset_id}' AS asset
             FROM date_series ds
             LEFT JOIN daily_volume_table dv
             ON ds.day = dv.day
