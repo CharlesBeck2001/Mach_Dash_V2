@@ -2146,7 +2146,6 @@ with col1:
     #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
     
     # Plot the cumulative data using st.line_chart
-    st.write(pivot_data.index)
     st.line_chart(pivot_data, use_container_width=True)
 
 with col2:
