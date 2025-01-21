@@ -875,7 +875,7 @@ if 1==1:
             FROM source_volume_table svt
         )
         SELECT 
-            SUM(total_volume) AS volume
+            2*SUM(total_volume) AS volume
         FROM overall_volume_table_2
         """
         
@@ -1360,8 +1360,6 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1380,14 +1378,14 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 (dvt.dest_volume + svt.source_volume) AS total_volume,
-                svt.block_timestamp AS date
+                svt.block_timestamp AS date,
+                svt.source_id AS source_asset,
+                dvt.dest_id AS dest_asset
             FROM source_volume_table svt
             INNER JOIN dest_volume_table dvt
                 ON svt.order_uuid = dvt.order_uuid
@@ -1409,14 +1407,14 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.src_asset_address = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.created_at >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 svt.source_volume AS total_volume,
-                svt.created_at AS date
+                svt.created_at AS date,
+                svt.source_id AS source_asset,
+                '' AS dest_asset
             FROM source_volume_table_3 svt
         ),
         combined_volume_table AS (
@@ -1433,6 +1431,7 @@ def get_volume_vs_date(asset_id, sd):
             COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
             '{asset_id}' AS asset
         FROM combined_volume_table svt
+        WHERE svt.source_asset = '{asset_id}' OR svt.dest_asset = '{asset_id}'
         GROUP BY DATE_TRUNC('day', svt.date)
         ORDER BY DATE_TRUNC('day', svt.date)
         """
@@ -1456,7 +1455,6 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1475,13 +1473,14 @@ def get_volume_vs_date(asset_id, sd):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 (dvt.dest_volume + svt.source_volume) AS total_volume,
-                svt.block_timestamp AS date
+                svt.block_timestamp AS date,
+                svt.source_id AS source_asset,
+                dvt.dest_id AS dest_asset
             FROM source_volume_table svt
             INNER JOIN dest_volume_table dvt
                 ON svt.order_uuid = dvt.order_uuid
@@ -1508,7 +1507,9 @@ def get_volume_vs_date(asset_id, sd):
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 svt.source_volume AS total_volume,
-                svt.created_at AS date
+                svt.created_at AS date,
+                svt.source_id AS source_asset,
+                '' AS dest_asset
             FROM source_volume_table_3 svt
         ),
         combined_volume_table AS (
@@ -1523,7 +1524,7 @@ def get_volume_vs_date(asset_id, sd):
         SELECT 
             TO_CHAR(DATE_TRUNC('day', svt.date), 'FMMonth FMDD, YYYY') AS day,
             COALESCE(SUM(svt.total_volume), 0) AS total_daily_volume,
-            'Total' AS asset
+            '{asset_id}' AS asset
         FROM combined_volume_table svt
         GROUP BY DATE_TRUNC('day', svt.date)
         ORDER BY DATE_TRUNC('day', svt.date)
