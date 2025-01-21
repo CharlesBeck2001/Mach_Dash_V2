@@ -1573,8 +1573,6 @@ def get_weekly_volume_vs_date(asset_id, sd):
                 ON op.source_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         dest_volume_table AS (
             SELECT DISTINCT
@@ -1593,14 +1591,14 @@ def get_weekly_volume_vs_date(asset_id, sd):
                 ON op.dest_asset = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.block_timestamp >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 (dvt.dest_volume + svt.source_volume) AS total_volume,
-                svt.block_timestamp AS date
+                svt.block_timestamp AS date,
+                svt.source_id AS source_id,
+                dvt.dest_id AS dest_id
             FROM source_volume_table svt
             INNER JOIN dest_volume_table dvt
                 ON svt.order_uuid = dvt.order_uuid
@@ -1622,14 +1620,14 @@ def get_weekly_volume_vs_date(asset_id, sd):
                 ON op.src_asset_address = cal.address
             INNER JOIN coingecko_market_data cmd 
                 ON cal.id = cmd.id
-            WHERE op.created_at >= '{sd}'
-                AND cal.id = '{asset_id}'
         ),
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
                 svt.source_volume AS total_volume,
-                svt.created_at AS date
+                svt.created_at AS date,
+                svt.source_id AS source_id,
+                '' AS dest_id
             FROM source_volume_table_3 svt
         ),
         combined_volume_table AS (
@@ -1645,15 +1643,16 @@ def get_weekly_volume_vs_date(asset_id, sd):
             SELECT 
                 DATE_TRUNC('day', svt.date) AS day,
                 SUM(svt.total_volume) AS daily_volume,
-                '{asset_id}' AS asset
+                'bridged-usdt' AS asset
                 FROM combined_volume_table svt
+                WHERE svt.source_id = '{asset_id}' OR svt.dest_id = '{asset_id}'
                 GROUP BY DATE_TRUNC('day', svt.date)
         ),
         filled_daily_volume_table AS (
             SELECT 
                 ds.day,
                 COALESCE(dv.daily_volume, 0) AS daily_volume,
-                '{asset_id}' AS asset
+                'bridged-usdt' AS asset
             FROM date_series ds
             LEFT JOIN daily_volume_table dv
             ON ds.day = dv.day
@@ -1673,7 +1672,6 @@ def get_weekly_volume_vs_date(asset_id, sd):
             weekly_avg_volume AS total_weekly_avg_volume,
             asset
         FROM weekly_averaged_volume_table
-        WHERE day >= '{sd}'
         ORDER BY day
         """
     else:
