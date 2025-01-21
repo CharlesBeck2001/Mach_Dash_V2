@@ -1529,7 +1529,6 @@ def get_volume_vs_date(asset_id, sd):
         ORDER BY DATE_TRUNC('day', svt.date)
         """
 
-    st.write(execute_sql(query))
     # Execute the query and return the result as a DataFrame
     return pd.json_normalize(execute_sql(query)['result'])
 
@@ -2051,7 +2050,6 @@ if "preloaded_2" not in st.session_state:
         
         daily_vol = get_volume_vs_date(asset, time_point['oldest_time'][0])
         weekly_vol = get_weekly_volume_vs_date(asset, time_point['oldest_time'][0])
-        st.write(daily_vol)
         preloaded_2[asset + ' Weekly Average'] = weekly_vol
         preloaded_2[asset + ' Daily Value'] = daily_vol
 
