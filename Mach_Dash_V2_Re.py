@@ -2217,7 +2217,6 @@ col1, col2 = st.columns(2)
 
 time_ranges_2 = {
     "All Time": None,  # Special case for no date filter
-    "Last Week": 7,
     "Last Month": 30,
     "Last 3 Months": 90,
     "Last 6 Months": 180
