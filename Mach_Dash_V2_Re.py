@@ -2140,18 +2140,39 @@ with col1:
     # Reset index and melt for Altair
     melted_data = pivot_data.reset_index().melt(id_vars='date', var_name='Asset', value_name='Total Hourly Volume')
     
-    # Altair line chart with custom tooltip
-    chart = alt.Chart(melted_data).mark_line().encode(
+    # Base line chart
+    base = alt.Chart(melted_data).mark_line().encode(
         x=alt.X('date:T', title="Date and Time"),  # Datetime on x-axis
         y=alt.Y('Total Hourly Volume:Q', title="Total Hourly Volume"),  # Volume on y-axis
         color='Asset:N',  # Color for each asset
-        tooltip=[
-            alt.Tooltip('date:T', title='Date & Time', format='%Y-%m-%d %H:%M:%S'),  # Full datetime
-            alt.Tooltip('Asset:N', title='Asset'),  # Asset name
-            alt.Tooltip('Total Hourly Volume:Q', title='Volume'),  # Asset volume
-        ]
-    ).interactive()  # Enable interactivity (zoom/pan)
+    )
     
+    # Add an interactive rule to hover over the graph
+    hover = alt.selection_single(
+        fields=["date"],
+        nearest=True,
+        on="mouseover",
+        empty="none",
+        clear="mouseout"
+    )
+    
+    # Highlight points at the hovered timestamp
+    points = base.mark_circle(size=65).encode(
+        opacity=alt.condition(hover, alt.value(1), alt.value(0))
+    ).add_selection(hover)
+    
+    # Text tooltips showing all asset values at the hovered timestamp
+    tooltips = base.mark_text(align="left", dx=5, dy=-5).encode(
+        text=alt.condition(hover, 'Total Hourly Volume:Q', alt.value('')),
+        opacity=alt.condition(hover, alt.value(1), alt.value(0))
+    )
+    
+    # Combine the chart layers
+    chart = alt.layer(
+        base, points, tooltips
+    ).interactive()
+    
+    # Display in Streamlit
     st.altair_chart(chart, use_container_width=True)
 
 with col2:
