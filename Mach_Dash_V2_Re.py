@@ -109,7 +109,6 @@ st.markdown(
 st.title("Mach Exchange Statistics")
 # Get today's date
 today = datetime.now()
-st.write(today)
 
 if "today" not in st.session_state:
     st.session_state["today"] = datetime.now()
@@ -1412,7 +1411,7 @@ def get_volume_vs_date(asset_id, sd):
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
-                svt.source_volume AS total_volume,
+                2*svt.source_volume AS total_volume,
                 svt.created_at AS date,
                 svt.source_id AS source_asset,
                 '' AS dest_asset
@@ -1507,7 +1506,7 @@ def get_volume_vs_date(asset_id, sd):
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
-                svt.source_volume AS total_volume,
+                2*svt.source_volume AS total_volume,
                 svt.created_at AS date,
                 svt.source_id AS source_asset,
                 '' AS dest_asset
@@ -1625,7 +1624,7 @@ def get_weekly_volume_vs_date(asset_id, sd):
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
-                svt.source_volume AS total_volume,
+                2*svt.source_volume AS total_volume,
                 svt.created_at AS date,
                 svt.source_id AS source_id,
                 '' AS dest_id
@@ -1754,7 +1753,7 @@ def get_weekly_volume_vs_date(asset_id, sd):
         overall_volume_table_3 AS (
             SELECT DISTINCT
                 svt.order_uuid AS order_id,
-                svt.source_volume AS total_volume,
+                2*svt.source_volume AS total_volume,
                 svt.created_at AS date,
                 svt.source_id AS source_id,
                 '' AS dest_id
@@ -1925,7 +1924,7 @@ def get_last_day(asset_id, sd):
         overall_volume_table_2 AS (
             SELECT DISTINCT
                 svt.*,
-                svt.source_volume AS total_volume
+                2*svt.source_volume AS total_volume
             FROM source_volume_table svt
         )
         SELECT 
@@ -2053,7 +2052,7 @@ def get_last_day(asset_id, sd):
         overall_volume_table_2 AS (
             SELECT DISTINCT
                 svt.*,
-                svt.source_volume AS total_volume
+                2*svt.source_volume AS total_volume
             FROM source_volume_table svt
         )
         SELECT 
