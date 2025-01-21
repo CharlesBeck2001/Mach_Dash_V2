@@ -2174,6 +2174,7 @@ with col2:
     st.line_chart(pivot_data, use_container_width=True)
 
 
+col1, col2 = st.columns(2)
 
 time_ranges_2 = {
     "All Time": None,  # Special case for no date filter
