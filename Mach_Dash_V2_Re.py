@@ -2136,6 +2136,7 @@ with col1:
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
+    st.write(pivot_data)
     
     # Create a full range of hours for the day
     #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
@@ -2147,7 +2148,7 @@ with col1:
     
     # Altair chart for customized tooltip
     chart = alt.Chart(pivot_data).mark_line().encode(
-        x=alt.X('datetime:T', title="Date and Time"),  # Specify datetime type
+        x=alt.X('date:T', title="Date and Time"),  # Specify datetime type
         y=alt.Y('value:Q', title="Value"),
         tooltip=[
             alt.Tooltip('datetime:T', title='Date & Time', format='%Y-%m-%d %H:%M:%S'),
