@@ -2124,7 +2124,7 @@ with col1:
     pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
     
-    
+    st.write(pivot_data)
     # Create a full range of hours for the day
     #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
     #pivot_data = pivot_data.reindex(full_hour_range)
@@ -2166,7 +2166,7 @@ with col2:
     #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
     #pivot_data = pivot_data.reindex(full_hour_range)
     
-    
+    st.write(pivot_data)
     # Fill gaps using interpolation
     #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
     
@@ -2238,6 +2238,8 @@ with col2:
 
     # Calculate cumulative sum for each asset
     cumulative_data = pivot_data.cumsum()
+
+    st.write(cumulative_data)
 
     # Plot the cumulative data using st.line_chart
     st.line_chart(cumulative_data, use_container_width=True)
@@ -2326,6 +2328,7 @@ with col1:
             # If the column doesn't exist for the asset, create it with NaN values
             pivot_data[asset] = pd.NA
     # Plot the combined data using st.line_chart
+    st.write(pivot_data)
     st.line_chart(pivot_data, use_container_width=True)
 
 col1, col2 = st.columns(2)
