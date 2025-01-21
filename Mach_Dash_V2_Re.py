@@ -1413,10 +1413,11 @@ def get_volume_vs_date(asset_id, sd):
         ),
         overall_volume_table_3 AS (
             SELECT DISTINCT
-                svt.*,
-                svt.source_volume AS total_volume
+                svt.order_uuid AS order_id,
+                svt.source_volume AS total_volume,
+                svt.created_at AS date
             FROM source_volume_table_3 svt
-        )
+        ),
         combined_volume_table AS (
             SELECT DISTINCT
                 * 
