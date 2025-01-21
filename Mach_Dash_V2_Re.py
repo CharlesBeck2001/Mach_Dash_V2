@@ -2136,25 +2136,21 @@ with col1:
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
-    st.write(pivot_data)
+
+    # Reset index and melt for Altair
+    melted_data = pivot_data.reset_index().melt(id_vars='date', var_name='Asset', value_name='Total Hourly Volume')
     
-    # Create a full range of hours for the day
-    #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
-    #pivot_data = pivot_data.reindex(full_hour_range)
-    
-    
-    # Fill gaps using interpolation
-    #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
-    
-    # Altair chart for customized tooltip
-    chart = alt.Chart(pivot_data).mark_line().encode(
-        x=alt.X('date:T', title="Date and Time"),  # Specify datetime type
-        y=alt.Y('value:Q', title="Value"),
+    # Altair line chart with custom tooltip
+    chart = alt.Chart(melted_data).mark_line().encode(
+        x=alt.X('date:T', title="Date and Time"),  # Datetime on x-axis
+        y=alt.Y('Total Hourly Volume:Q', title="Total Hourly Volume"),  # Volume on y-axis
+        color='Asset:N',  # Color for each asset
         tooltip=[
-            alt.Tooltip('datetime:T', title='Date & Time', format='%Y-%m-%d %H:%M:%S'),
-            alt.Tooltip('value:Q', title='Value'),
+            alt.Tooltip('date:T', title='Date & Time', format='%Y-%m-%d %H:%M:%S'),  # Full datetime
+            alt.Tooltip('Asset:N', title='Asset'),  # Asset name
+            alt.Tooltip('Total Hourly Volume:Q', title='Volume'),  # Asset volume
         ]
-    )
+    ).interactive()  # Enable interactivity (zoom/pan)
     
     st.altair_chart(chart, use_container_width=True)
 
