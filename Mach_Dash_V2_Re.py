@@ -2167,9 +2167,17 @@ with col1:
         opacity=alt.condition(hover, alt.value(1), alt.value(0))
     )
     
-    # Combine the chart layers
+    # Custom tooltip with formatted date and time
     chart = alt.layer(
-        base, points, tooltips
+        base,
+        points,
+        tooltips
+    ).encode(
+        tooltip=[
+            alt.Tooltip('date:T', title='Date & Time', format='%B, %d %Y at %I:%M %p'),  # Custom format
+            alt.Tooltip('Asset:N', title='Asset'),
+            alt.Tooltip('Total Hourly Volume:Q', title='Volume'),
+        ]
     ).interactive()
     
     # Display in Streamlit
