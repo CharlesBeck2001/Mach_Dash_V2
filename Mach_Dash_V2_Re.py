@@ -1479,13 +1479,9 @@ def get_volume_vs_date(asset_id, sd):
         ),
         overall_volume_table_2 AS (
             SELECT DISTINCT
-                svt.*,
-                dvt.dest_id AS dest_id,
-                dvt.dest_chain AS dest_chain,
-                dvt.dest_decimal AS dest_decimal,
-                dvt.dest_price AS dest_price,
-                dvt.dest_volume AS dest_volume,
-                (dvt.dest_volume + svt.source_volume) AS total_volume
+                svt.order_uuid AS order_id,
+                (dvt.dest_volume + svt.source_volume) AS total_volume,
+                svt.block_timestamp AS date
             FROM source_volume_table svt
             INNER JOIN dest_volume_table dvt
                 ON svt.order_uuid = dvt.order_uuid
@@ -1518,10 +1514,11 @@ def get_volume_vs_date(asset_id, sd):
         ),
         overall_volume_table_3 AS (
             SELECT DISTINCT
-                svt.*,
-                svt.source_volume AS total_volume
+                svt.order_uuid AS order_id,
+                svt.source_volume AS total_volume,
+                svt.created_at AS date
             FROM source_volume_table_3 svt
-        )
+        ),
         combined_volume_table AS (
             SELECT DISTINCT
                 * 
