@@ -2161,17 +2161,10 @@ with col1:
         opacity=alt.condition(hover, alt.value(1), alt.value(0))
     ).add_selection(hover)
     
-    # Text tooltips showing all asset values at the hovered timestamp
-    tooltips = base.mark_text(align="left", dx=5, dy=-5).encode(
-        text=alt.condition(hover, 'Total Hourly Volume:Q', alt.value('')),
-        opacity=alt.condition(hover, alt.value(1), alt.value(0))
-    )
-    
     # Custom tooltip with formatted date and time
     chart = alt.layer(
         base,
-        points,
-        tooltips
+        points
     ).encode(
         tooltip=[
             alt.Tooltip('date:T', title='Date & Time', format='%B, %d %Y at %I:%M %p'),  # Custom format
