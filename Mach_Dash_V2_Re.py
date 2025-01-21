@@ -2144,7 +2144,7 @@ with col1:
     base = alt.Chart(melted_data).mark_line().encode(
         x=alt.X('date:T', title="Date and Time"),  # Datetime on x-axis
         y=alt.Y('Total Hourly Volume:Q', title="Total Hourly Volume"),  # Volume on y-axis
-        color='Asset:N',  # Color for each asset
+        color=alt.Color('Asset:N', legend=None),  # Remove legend
     )
     
     # Add an interactive rule to hover over the graph
