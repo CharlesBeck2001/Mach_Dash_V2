@@ -2119,12 +2119,12 @@ with col1:
                 # Add the 'asset' column (asset name is already included in 'data')
                 all_assets_data_hour = pd.concat([all_assets_data_hour, data])
     
-    
+
+    all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='hour', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
     
-    st.write(pivot_data)
     # Create a full range of hours for the day
     #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
     #pivot_data = pivot_data.reindex(full_hour_range)
@@ -2157,7 +2157,8 @@ with col2:
                 # Add the 'asset' column (asset name is already included in 'data')
                 all_assets_data_day = pd.concat([all_assets_data_day, data])
     
-    
+
+    all_assets_data_day['day'] = pd.to_datetime(all_assets_data_day['day'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_day.pivot(index='day', columns='asset', values='total_daily_volume')
     pivot_data = pivot_data.fillna(0)
@@ -2166,7 +2167,6 @@ with col2:
     #full_hour_range = pd.date_range(start=pivot_data.index.min(), end=pivot_data.index.max(), freq='H')
     #pivot_data = pivot_data.reindex(full_hour_range)
     
-    st.write(pivot_data)
     # Fill gaps using interpolation
     #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
     
