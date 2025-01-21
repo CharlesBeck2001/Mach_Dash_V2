@@ -2145,8 +2145,17 @@ with col1:
     # Fill gaps using interpolation
     #pivot_data = pivot_data.interpolate(method='linear')  # Use linear interpolation for smooth filling
     
-    # Plot the cumulative data using st.line_chart
-    st.line_chart(pivot_data, use_container_width=True)
+    # Altair chart for customized tooltip
+    chart = alt.Chart(pivot_data).mark_line().encode(
+        x=alt.X('datetime:T', title="Date and Time"),  # Specify datetime type
+        y=alt.Y('value:Q', title="Value"),
+        tooltip=[
+            alt.Tooltip('datetime:T', title='Date & Time', format='%Y-%m-%d %H:%M:%S'),
+            alt.Tooltip('value:Q', title='Value'),
+        ]
+    )
+    
+    st.altair_chart(chart, use_container_width=True)
 
 with col2:
     st.subheader("Volume In The Last Week")
