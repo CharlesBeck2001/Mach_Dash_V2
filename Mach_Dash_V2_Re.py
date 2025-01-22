@@ -2134,12 +2134,11 @@ with col1:
         # Add the 'asset' column (asset name is already included in 'data')
         all_assets_data_hour = pd.concat([all_assets_data_hour, data])
                 
-    st.write(all_assets_data_hour)
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
-
+    st.write(pivot_data)
     # Melt the data back into long format for Plotly
     melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='total_hourly_volume')
 
@@ -2192,10 +2191,9 @@ with col2:
     pivot_data = pivot_data.fillna(0)
     
     # Reset index to make it Plotly-compatible
-    pivot_data = pivot_data.reset_index()
 
     # Melt the data back into long format for Plotly
-    melted_data = pivot_data.melt(id_vars=['day'], var_name='asset', value_name='volume')
+    melted_data = pivot_data.reset_index().melt(id_vars='date', var_name='Asset', value_name='Total Hourly Volume')
 
     # Create an interactive bar chart with Plotly
     fig = px.bar(
