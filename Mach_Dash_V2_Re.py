@@ -2114,27 +2114,22 @@ time_ranges_2 = {
     "Last 6 Months": 180
 }
 
-selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list[:4])
-
 col1, col2 = st.columns(2)
 with col1:
     
     st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
     all_assets_data_hour = pd.DataFrame()
     
-    # Process individual assets
-    for asset in selected_assets_hourly:
-            # Fetch data for the selected assets
-            data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+    data = st.session_state["preloaded_2"]['Total' + ' Hourly Value']
 
-            # Apply the function to the 'hour' column
-            data['date'] = data['hour'].apply(create_prior_day_datetime)
-    
-            if data.empty:
-                st.warning(f"No data available for {asset}!")
-            else:
-                # Add the 'asset' column (asset name is already included in 'data')
-                all_assets_data_hour = pd.concat([all_assets_data_hour, data])
+    # Apply the function to the 'hour' column
+    data['date'] = data['hour'].apply(create_prior_day_datetime)
+
+    if data.empty:
+        st.warning(f"No data available for {asset}!")
+    else:
+        # Add the 'asset' column (asset name is already included in 'data')
+        all_assets_data_hour = pd.concat([all_assets_data_hour, data])
                 
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
@@ -2221,6 +2216,119 @@ with col2:
     st.plotly_chart(fig, use_container_width=True)
 
 col1, col2 = st.columns(2)
+
+selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list[:4])
+
+col1, col2 = st.columns(2)
+with col1:
+    
+    st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
+    all_assets_data_hour = pd.DataFrame()
+    
+    # Process individual assets
+    for asset in selected_assets_hourly:
+
+            if asset != 'Total':
+                # Fetch data for the selected assets
+                data = st.session_state["preloaded_2"][asset + ' Hourly Value']
+    
+                # Apply the function to the 'hour' column
+                data['date'] = data['hour'].apply(create_prior_day_datetime)
+        
+                if data.empty:
+                    st.warning(f"No data available for {asset}!")
+                else:
+                    # Add the 'asset' column (asset name is already included in 'data')
+                    all_assets_data_hour = pd.concat([all_assets_data_hour, data])
+                
+    #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
+    pivot_data = pivot_data.fillna(0)
+    pivot_data = pivot_data.reset_index()
+    
+    # Melt the data back into long format for Plotly
+    melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='total_hourly_volume')
+
+    # Create an interactive bar chart with Plotly
+    fig = px.bar(
+        melted_data,
+        x='date',
+        y='total_hourly_volume',
+        color='asset',
+        title="Volume By Hour For Latest Calendar Day of Active Trading",
+        labels={'date': 'Date & Time', 'total_hourly_volume': 'Volume'},
+        hover_data={'date': '|%Y-%m-%d %H:%M:%S', 'total_hourly_volume': True, 'asset': True},
+    )
+
+    # Update layout for better readability
+    fig.update_layout(
+        xaxis_title="Date & Time",
+        yaxis_title="Volume",
+        legend_title="Asset",
+        hovermode="x unified",
+    )
+
+    # Render the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+
+with col2:
+    st.subheader("Volume In The Last Week")
+    all_assets_data_day = pd.DataFrame()
+    
+    # Process individual assets
+    for asset in selected_assets_hourly:
+            # Fetch data for the selected assets
+            if asset != 'Total': 
+                data = st.session_state["preloaded_2"][asset + ' Week Volume']
+        
+                date = today - timedelta(days=7)
+                date = date.strftime('%Y-%m-%dT%H:%M:%S')
+                
+                data = data[pd.to_datetime(data['day']) > pd.to_datetime(date)]
+        
+                if data.empty:
+                    st.warning(f"No data available for {asset}!")
+                else:
+                    # Add the 'asset' column (asset name is already included in 'data')
+                    all_assets_data_day = pd.concat([all_assets_data_day, data])
+    
+
+    all_assets_data_day['day'] = pd.to_datetime(all_assets_data_day['day'])
+    # Pivot the data to have separate columns for each asset
+    pivot_data = all_assets_data_day.pivot(index='day', columns='asset', values='total_daily_volume')
+    pivot_data = pivot_data.fillna(0)
+    pivot_data = pivot_data.reset_index()
+    # Reset index to make it Plotly-compatible
+
+    # Melt the data back into long format for Plotly
+    melted_data = pivot_data.melt(id_vars='day', var_name='asset', value_name='Total Daily Volume')
+
+    # Create an interactive bar chart with Plotly
+    fig = px.bar(
+        melted_data,
+        x='day',
+        y='Total Daily Volume',
+        color='asset',
+        title="Volume In The Last Week",
+        labels={'day': 'Date', 'Total Daily Volume': 'Volume'},
+        hover_data={'day': '|%Y-%m-%d', 'Total Daily Volume': True, 'asset': True},
+    )
+
+    # Update layout for better readability
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Volume",
+        legend_title="Asset",
+        hovermode="x unified",
+    )
+
+    # Render the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+col1, col2 = st.columns(2)
+
 
 ##selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list_day[:1])
 col1, col2 = st.columns(2)
