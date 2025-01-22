@@ -1012,8 +1012,10 @@ if 1==1:
     
     def load_metrics(data):
         # Define the layout
-                
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
+
+        st.metric(label="Total Volume in the Previous Active Day",value = f"${data['last_day_v']:,.2f}")
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         # Box 1
         with col1:
@@ -1033,9 +1035,6 @@ if 1==1:
         
         with col5:
             st.metric(label="Percent of Users With More Than 1 Trade",value=data['perc_above'])
-
-        with col6: 
-            st.metric(label="Total Volume in the Previous Active Day",value = f"${data['last_day_v']:,.2f}")
 
         st.markdown(
         """
