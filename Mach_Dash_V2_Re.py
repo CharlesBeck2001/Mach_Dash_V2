@@ -1012,8 +1012,6 @@ if 1==1:
     
     def load_metrics(data):
         # Define the layout
-
-        st.metric(label="Total Volume in the Previous Active Day",value = f"${data['last_day_v']:,.2f}")
         
         col1, col2, col3, col4, col5 = st.columns(5)
         
@@ -1050,7 +1048,58 @@ if 1==1:
         unsafe_allow_html=True,
         )
         # Additional styling for more customization (optional)
+
+sql_query18 = """
+        WITH latest_date AS (
+            SELECT DATE_TRUNC('day', MAX(created_at)) AS max_date
+            FROM mm_order_placed
+        ),
+        source_volume_table AS (
+            SELECT DISTINCT
+                op.*, 
+                ti.decimals AS source_decimal,
+                cal.id AS source_id,
+                cal.chain AS source_chain,
+                cmd.current_price::FLOAT AS source_price,
+                (cmd.current_price::FLOAT * op.src_amount) / POWER(10, ti.decimals) AS source_volume
+            FROM mm_order_placed op
+            INNER JOIN mm_match_executed me
+                ON op.order_uuid = me.order_uuid
+            INNER JOIN token_info ti
+                ON op.src_asset_address = ti.address
+            INNER JOIN coingecko_assets_list cal
+                ON op.src_asset_address = cal.address
+            INNER JOIN coingecko_market_data cmd 
+                ON cal.id = cmd.id
+            WHERE op.created_at >= (
+                    SELECT max_date - INTERVAL '1 day' 
+                    FROM latest_date
+                )
+              AND op.created_at < (
+                    SELECT max_date 
+                    FROM latest_date
+                )
+        ),
+        overall_volume_table_2 AS (
+            SELECT DISTINCT
+                svt.*,
+                svt.source_volume AS total_volume
+            FROM source_volume_table svt
+        )
+        SELECT 
+            2*SUM(total_volume) AS volume
+        FROM overall_volume_table_2
+        """
+
+df_last_day_v = execute_sql(sql_query18)    
         
+df_last_day_v  = pd.json_normalize(df_last_day_v['result'])
+
+last_day_v = df_last_day_v['volume'].iloc[0]
+
+st.metric(label="Total Volume in the Previous Active Day",value = f"${last_day_v:,.2f}")
+
+
 if "preloaded" not in st.session_state:
     preloaded = {}
     for i in day_list:
