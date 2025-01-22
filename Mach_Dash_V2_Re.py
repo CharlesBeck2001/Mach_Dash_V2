@@ -2081,8 +2081,6 @@ asset_list_day = asset_fetch_day()
 asset_list_day = asset_list_day[:10]
 asset_list_day = ['Total'] + asset_list_day
 
-
-
 #st.write(asset_list_day)
 
 if "preloaded_2" not in st.session_state:
@@ -2141,6 +2139,31 @@ with col1:
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
+
+    # Melt the data back into long format for Plotly
+    melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='volume')
+
+    # Create an interactive bar chart with Plotly
+    fig = px.bar(
+        melted_data,
+        x='date',
+        y='volume',
+        color='asset',
+        title="Volume By Hour For Latest Calendar Day of Active Trading",
+        labels={'date': 'Date & Time', 'volume': 'Volume'},
+        hover_data={'date': '|%Y-%m-%d %H:%M:%S', 'volume': True, 'asset': True},
+    )
+
+    # Update layout for better readability
+    fig.update_layout(
+        xaxis_title="Date & Time",
+        yaxis_title="Volume",
+        legend_title="Asset",
+        hovermode="x unified",
+    )
+
+    # Render the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
 
 with col2:
