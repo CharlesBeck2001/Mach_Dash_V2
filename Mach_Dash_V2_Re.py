@@ -2078,7 +2078,7 @@ asset_list = asset_list[:15]
 asset_list = ['Total'] + asset_list
 
 asset_list_day = asset_fetch_day()
-asset_list_day = asset_list_day[:10]
+asset_list_day = asset_list_day[:15]
 asset_list_day_2 = asset_list_day
 asset_list_day = ['Total'] + asset_list_day
 
