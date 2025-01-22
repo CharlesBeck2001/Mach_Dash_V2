@@ -2081,6 +2081,8 @@ asset_list_day = asset_fetch_day()
 asset_list_day = asset_list_day[:10]
 asset_list_day = ['Total'] + asset_list_day
 
+
+
 #st.write(asset_list_day)
 
 if "preloaded_2" not in st.session_state:
@@ -2106,6 +2108,9 @@ if "preloaded_2" not in st.session_state:
 
     
     st.session_state["preloaded_2"] = preloaded_2
+
+
+selected_assets_hourly = st.selectbox("Select a time range for the long-term volume display:", list(time_ranges_2.keys()))
 
 col1, col2 = st.columns(2)
 with col1:
