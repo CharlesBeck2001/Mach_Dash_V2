@@ -2150,7 +2150,7 @@ with col1:
         y='total_hourly_volume',
         color='asset',
         title="Volume By Hour For Latest Calendar Day of Active Trading",
-        labels={'date': 'Date & Time', 'volume': 'Volume'},
+        labels={'date': 'Date & Time', 'total_hourly_volume': 'Volume'},
         hover_data={'date': '|%Y-%m-%d %H:%M:%S', 'volume': True, 'asset': True},
     )
 
