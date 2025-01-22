@@ -2109,6 +2109,12 @@ if "preloaded_2" not in st.session_state:
     
     st.session_state["preloaded_2"] = preloaded_2
 
+time_ranges_2 = {
+    "All Time": None,  # Special case for no date filter
+    "Last Month": 30,
+    "Last 3 Months": 90,
+    "Last 6 Months": 180
+}
 
 selected_assets_hourly = st.selectbox("Select a time range for the long-term volume display:", list(time_ranges_2.keys()))
 
