@@ -2134,7 +2134,7 @@ with col1:
         # Add the 'asset' column (asset name is already included in 'data')
         all_assets_data_hour = pd.concat([all_assets_data_hour, data])
                 
-    
+    st.write(all_assets_data_hour)
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
