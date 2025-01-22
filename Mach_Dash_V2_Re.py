@@ -2116,7 +2116,7 @@ time_ranges_2 = {
     "Last 6 Months": 180
 }
 
-selected_assets_hourly = st.selectbox("Select a time range for the long-term volume display:", list(time_ranges_2.keys()))
+selected_assets_hourly = st.multiselect("Select Assets", asset_list_day, default=asset_list[:4])
 
 col1, col2 = st.columns(2)
 with col1:
