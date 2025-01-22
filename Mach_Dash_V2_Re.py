@@ -2200,7 +2200,7 @@ with col2:
     fig = px.bar(
         melted_data,
         x='day',
-        y='total_daily_volume',
+        y='Total Daily Volume',
         color='asset',
         title="Volume In The Last Week",
         labels={'day': 'Date', 'Total Daily Volume': 'Volume'},
