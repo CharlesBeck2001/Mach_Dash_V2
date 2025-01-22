@@ -2194,7 +2194,7 @@ with col2:
     # Reset index to make it Plotly-compatible
 
     # Melt the data back into long format for Plotly
-    melted_data = pivot_data.melt(id_vars='date', var_name='asset', value_name='Total Daily Volume')
+    melted_data = pivot_data.melt(id_vars='day', var_name='asset', value_name='Total Daily Volume')
 
     # Create an interactive bar chart with Plotly
     fig = px.bar(
