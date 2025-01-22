@@ -2141,13 +2141,13 @@ with col1:
     pivot_data = pivot_data.fillna(0)
 
     # Melt the data back into long format for Plotly
-    melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='volume')
+    melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='total_hourly_volume')
 
     # Create an interactive bar chart with Plotly
     fig = px.bar(
         melted_data,
         x='date',
-        y='volume',
+        y='total_hourly_volume',
         color='asset',
         title="Volume By Hour For Latest Calendar Day of Active Trading",
         labels={'date': 'Date & Time', 'volume': 'Volume'},
