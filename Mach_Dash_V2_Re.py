@@ -2139,7 +2139,7 @@ with col1:
     pivot_data = all_assets_data_hour.pivot(index='date', columns='asset', values='total_hourly_volume')
     pivot_data = pivot_data.fillna(0)
     pivot_data = pivot_data.reset_index()
-    st.write(pivot_data)
+    
     # Melt the data back into long format for Plotly
     melted_data = pivot_data.melt(id_vars=['date'], var_name='asset', value_name='total_hourly_volume')
 
@@ -2151,7 +2151,7 @@ with col1:
         color='asset',
         title="Volume By Hour For Latest Calendar Day of Active Trading",
         labels={'date': 'Date & Time', 'total_hourly_volume': 'Volume'},
-        hover_data={'date': '|%Y-%m-%d %H:%M:%S', 'volume': True, 'asset': True},
+        hover_data={'date': '|%Y-%m-%d %H:%M:%S', 'total_hourly_volume': True, 'asset': True},
     )
 
     # Update layout for better readability
@@ -2200,10 +2200,10 @@ with col2:
     fig = px.bar(
         melted_data,
         x='day',
-        y='volume',
+        y='total_daily_volume',
         color='asset',
         title="Volume In The Last Week",
-        labels={'day': 'Date', 'volume': 'Volume'},
+        labels={'day': 'Date', 'total_daily_volume': 'Volume'},
         hover_data={'day': '|%Y-%m-%d', 'volume': True, 'asset': True},
     )
 
