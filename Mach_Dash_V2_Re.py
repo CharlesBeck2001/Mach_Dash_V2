@@ -2165,6 +2165,7 @@ with col1:
 
 
 with col2:
+    
     st.subheader("Volume In The Last Week")
     all_assets_data_day = pd.DataFrame()
     
@@ -2218,7 +2219,7 @@ with col2:
 
 col1, col2 = st.columns(2)
 
-selected_assets_hourly = st.multiselect("Select Assets", asset_list_day_2, default=asset_list[:4])
+selected_assets_hourly = st.multiselect("Select Assets", asset_list_day_2, default=asset_list_2[:4])
 
 col1, col2 = st.columns(2)
 with col1:
