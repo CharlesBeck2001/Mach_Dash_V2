@@ -2118,7 +2118,7 @@ time_ranges_2 = {
 col1, col2 = st.columns(2)
 with col1:
     
-    st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
+    st.subheader("Volume By Hour During The Previous Day")
     all_assets_data_hour = pd.DataFrame()
     
     data = st.session_state["preloaded_2"]['Total' + ' Hourly Value']
@@ -2224,7 +2224,7 @@ selected_assets_hourly = st.multiselect("Select Assets", asset_list_day_2, defau
 col1, col2 = st.columns(2)
 with col1:
     
-    st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
+    st.subheader("Volume By Hour Breakdown")
     all_assets_data_hour = pd.DataFrame()
     
     # Process individual assets
@@ -2276,7 +2276,7 @@ with col1:
 
 
 with col2:
-    st.subheader("Volume In The Last Week")
+    st.subheader("Volume In The Last Week Breakdown By Asset")
     all_assets_data_day = pd.DataFrame()
     
     # Process individual assets
