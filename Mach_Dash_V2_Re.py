@@ -2204,7 +2204,7 @@ with col2:
         color='asset',
         title="Volume In The Last Week",
         labels={'day': 'Date', 'Total Daily Volume': 'Volume'},
-        hover_data={'day': '|%Y-%m-%d', 'volume': True, 'asset': True},
+        hover_data={'day': '|%Y-%m-%d', 'Total Daily Volume': True, 'asset': True},
     )
 
     # Update layout for better readability
