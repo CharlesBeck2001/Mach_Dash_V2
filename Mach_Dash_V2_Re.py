@@ -2122,17 +2122,19 @@ with col1:
     st.subheader("Volume By Hour For Latest Calender Day of Active Trading")
     all_assets_data_hour = pd.DataFrame()
     
-    # Fetch data for the selected assets
-    data = st.session_state["preloaded_2"]['Total' + ' Hourly Value']
+    # Process individual assets
+    for asset in selected_assets_hourly:
+            # Fetch data for the selected assets
+            data = st.session_state["preloaded_2"][asset + ' Hourly Value']
 
-    # Apply the function to the 'hour' column
-    data['date'] = data['hour'].apply(create_prior_day_datetime)
-
-    if data.empty:
-        st.warning(f"No data available for {asset}!")
-    else:
-        # Add the 'asset' column (asset name is already included in 'data')
-        all_assets_data_hour = pd.concat([all_assets_data_hour, data])
+            # Apply the function to the 'hour' column
+            data['date'] = data['hour'].apply(create_prior_day_datetime)
+    
+            if data.empty:
+                st.warning(f"No data available for {asset}!")
+            else:
+                # Add the 'asset' column (asset name is already included in 'data')
+                all_assets_data_hour = pd.concat([all_assets_data_hour, data])
                 
     #all_assets_data_hour['hour'] = pd.to_datetime(all_assets_data_hour['hour'])
     # Pivot the data to have separate columns for each asset
