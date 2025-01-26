@@ -63,13 +63,13 @@ time_point = pd.json_normalize(time_point['result'])
 # Time range options
 time_ranges = {
     "All Time": None,  # Special case for no date filter
-    "Last Week": 10,
+    "Last Week": 11,
     "Last Month": 30,
     "Last 3 Months": 90,
     "Last 6 Months": 180
 }
 
-day_list = [10,30,90,180]
+day_list = [11,30,90,180]
 
 # Add custom CSS to adjust width
 st.markdown(
